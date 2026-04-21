@@ -1,189 +1,261 @@
-# 💊 FarmaCode
+# FarmaCode
 
-## 📱 Descripción
+## Descripción
 
-FarmaCode es una aplicación móvil Android que permite identificar medicamentos a partir de su nombre comercial (mediante OCR o ingreso manual) y obtener su **principio activo**, junto con una lista de **alternativas bioequivalentes**.
-
----
-
-## 🧠 Arquitectura
-
-El sistema sigue una arquitectura **cliente-servidor en tres capas**:
-
-```
-Android App (Cliente)
-        ↓
-API REST (Backend - Spring Boot)
-        ↓
-Base de Datos (MySQL)
-```
+FarmaCode es una aplicación móvil Android que permite identificar medicamentos a partir de su nombre comercial (mediante OCR o ingreso manual) y obtener su principio activo, junto con una lista de alternativas bioequivalentes almacenadas en base de datos.
 
 ---
 
-## ⚙️ Stack Tecnológico
+## Arquitectura
 
-### 📱 Frontend (Android)
+Arquitectura cliente-servidor en tres capas:
+
+```id="arch001"
+Android App (Kotlin)
+        ↓
+REST API (Spring Boot)
+        ↓
+MySQL Database
+```
+
+---
+
+## Stack Tecnológico
+
+### Frontend
 
 * Kotlin
 * CameraX
+* ML Kit (OCR)
 * Retrofit
 * OkHttp
-* Material Components
-* Coil / Glide
-
-### 🔎 Reconocimiento de texto
-
-* ML Kit (OCR)
-
-### ⚙️ Backend
-
-* Java
-* Spring Boot
-* Spring Data JPA
-* Spring Validation
-* Lombok (opcional)
-* Spring Security (opcional)
-
-### 🤖 Integración IA
-
-* Claude API (Anthropic)
-
-### 🗄️ Base de Datos
-
-* MySQL
-
-### 🧪 Testing
-
-* JUnit
-* Postman / Insomnia
-
-### 🔧 Herramientas
-
-* GitHub
-* Swagger / OpenAPI
-* Docker (opcional)
-
----
-
-## 🔌 Funcionalidades Principales
-
-* 📷 Escaneo de medicamentos mediante OCR
-* ⌨️ Búsqueda manual por nombre comercial
-* 🔄 Mapeo a principio activo mediante IA
-* 📊 Listado de bioequivalentes
-* 💲 Comparación de precios
-* 🔗 Consumo de API REST
-
----
-
-## 📂 Estructura del Proyecto
-
-```
-FarmaCode/
-│
-├── backend/          # API REST (Spring Boot)
-├── android-app/      # Aplicación Android
-├── database/         # Scripts y modelo de datos
-└── docs/             # Documentación técnica
-```
-
----
-
-## 🧩 Backend
-
-### Funcionalidades
-
-* API REST para gestión de medicamentos
-* CRUD de entidades principales
-* Integración con IA para procesamiento de texto
-* Documentación automática con Swagger
-
-### Entidades principales
-
-* Medicamento
-* PrincipioActivo
-* Bioequivalente
-* Precio
-
----
-
-## 📱 Aplicación Android
-
-### Funcionalidades
-
-* Captura de imágenes con CameraX
-* Reconocimiento de texto con ML Kit
-* Consumo de API mediante Retrofit
-* Navegación entre pantallas
-* Manejo de errores
-
----
-
-## 🔄 Flujo de funcionamiento
-
-1. Usuario escanea o ingresa un medicamento
-2. OCR extrae el texto (si aplica)
-3. Se envía el nombre al backend
-4. Backend consulta IA → obtiene principio activo
-5. Se consultan bioequivalentes en la base de datos
-6. Se retorna listado ordenado por precio
-7. App muestra resultados
-
----
-
-## 🚀 Instalación
 
 ### Backend
 
-```bash
+* Java
+* Spring Boot
+* Spring Web
+* Spring Data JPA
+* Spring Validation
+
+### Base de Datos
+
+* MySQL
+
+### Integraciones
+
+* Claude API (procesamiento de lenguaje)
+
+### Testing
+
+* JUnit
+* Postman
+
+---
+
+## Estructura del Proyecto
+
+```id="struct001"
+FarmaCode/
+│
+├── backend/
+│   ├── controller/
+│   ├── service/
+│   ├── repository/
+│   ├── model/
+│   └── config/
+│
+├── android-app/
+│   ├── ui/
+│   ├── network/
+│   ├── scanner/
+│   └── model/
+│
+├── database/
+│   └── schema.sql
+│
+└── docs/
+```
+
+---
+
+## Modelo de Datos
+
+### Entidad: Medicamento
+
+```json id="json001"
+{
+  "id": 1,
+  "nombreComercial": "Tapsin",
+  "principioActivo": "Paracetamol",
+  "laboratorio": "Laboratorio X"
+}
+```
+
+### Entidad: Bioequivalente
+
+```json id="json002"
+{
+  "id": 10,
+  "nombre": "Paracetamol Genérico",
+  "principioActivo": "Paracetamol",
+  "precio": 1200
+}
+```
+
+---
+
+## API REST
+
+### Base URL
+
+```id="url001"
+http://localhost:8080/api
+```
+
+---
+
+### Obtener principio activo desde nombre comercial
+
+**POST /analizar**
+
+```json id="req001"
+{
+  "nombre": "Tapsin"
+}
+```
+
+**Respuesta:**
+
+```json id="res001"
+{
+  "principioActivo": "Paracetamol"
+}
+```
+
+---
+
+### Obtener bioequivalentes
+
+**GET /bioequivalentes/{principioActivo}**
+
+Ejemplo:
+
+```id="url002"
+/api/bioequivalentes/Paracetamol
+```
+
+**Respuesta:**
+
+```json id="res002"
+[
+  {
+    "nombre": "Paracetamol Genérico",
+    "precio": 1200
+  },
+  {
+    "nombre": "Paracetamol 500mg",
+    "precio": 1500
+  }
+]
+```
+
+---
+
+### CRUD Medicamentos
+
+* GET /medicamentos
+* GET /medicamentos/{id}
+* POST /medicamentos
+* PUT /medicamentos/{id}
+* DELETE /medicamentos/{id}
+
+---
+
+## Flujo de Funcionamiento
+
+1. El usuario escanea un medicamento o ingresa el nombre
+2. ML Kit extrae el texto (si aplica)
+3. La app envía el nombre al backend
+4. El backend utiliza IA para identificar el principio activo
+5. Se consulta la base de datos
+6. Se retornan los bioequivalentes ordenados por precio
+7. La app muestra los resultados
+
+---
+
+## Configuración
+
+### Backend
+
+Archivo:
+
+```id="cfg001"
+application.properties
+```
+
+Ejemplo:
+
+```properties id="cfg002"
+spring.datasource.url=jdbc:mysql://localhost:3306/farmacode
+spring.datasource.username=root
+spring.datasource.password=1234
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+```
+
+---
+
+### Variables externas
+
+* API Key de Claude
+* Configuración de base de datos
+
+---
+
+## Ejecución
+
+### Backend
+
+```bash id="run001"
 cd backend
 ./mvnw spring-boot:run
-```
-
-Configurar conexión a MySQL en:
-
-```
-src/main/resources/application.properties
 ```
 
 ---
 
 ### Android
 
-1. Abrir proyecto en Android Studio
-2. Configurar URL del backend
-3. Ejecutar en emulador o dispositivo
+* Abrir en Android Studio
+* Configurar endpoint base
+* Ejecutar en dispositivo
 
 ---
 
-## 🔎 Documentación API
+## Testing
 
-Disponible en:
-
-```
-http://localhost:8080/swagger-ui.html
-```
-
----
-
-## 🧪 Testing
-
-* Pruebas unitarias con JUnit
+* Pruebas unitarias en servicios (JUnit)
 * Pruebas de endpoints con Postman
-* Validación de integración frontend-backend
+* Validación de integración completa
 
 ---
 
-## 🔐 Consideraciones
+## Consideraciones Técnicas
 
-* API preparada para integración con seguridad (Spring Security)
-* Manejo de errores en frontend y backend
-* Arquitectura escalable y modular
+* Separación por capas (Controller, Service, Repository)
+* Uso de DTOs para transferencia de datos
+* Manejo de errores centralizado
+* Preparado para autenticación futura
 
 ---
 
-## 📌 Estado del Proyecto
+## Estado del Proyecto
 
-🚧 En desarrollo (MVP funcional en construcción)
+MVP en desarrollo con funcionalidades base implementadas:
+
+* API REST operativa
+* Integración inicial con OCR
+* Modelo de datos definido
 
 ---
