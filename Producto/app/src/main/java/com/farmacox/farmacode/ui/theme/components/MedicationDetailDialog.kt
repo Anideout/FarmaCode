@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.filled.Science
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.farmacox.farmacode.data.dao.entity.Medication
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
 import com.farmacox.farmacode.ui.theme.theme.SuccessGreen
@@ -46,8 +46,12 @@ fun MedicationDetailDialog(
     medication: Medication,
     alternatives: List<Medication>,
     onDismiss: () -> Unit,
-    onAlternativeClick: (Medication) -> Unit
+    onAlternativeClick: (Medication) -> Unit,
+    fontSize: Float = 16f,
+    language: String = "Español"
 ) {
+    val isEnglish = language == "English"
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -69,7 +73,7 @@ fun MedicationDetailDialog(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     Box(
                         modifier = Modifier
                             .size(48.dp)
@@ -88,12 +92,12 @@ fun MedicationDetailDialog(
                     Column {
                         Text(
                             text = medication.nombre,
-                            style = MaterialTheme.typography.titleLarge,
+                            fontSize = (fontSize + 4).sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = medication.dosis,
-                            style = MaterialTheme.typography.bodyMedium,
+                            fontSize = fontSize.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -108,7 +112,7 @@ fun MedicationDetailDialog(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TypeBadge(tipo = medication.tipo)
+                TypeBadge(tipo = medication.tipo, fontSize = fontSize)
                 if (medication.certificacionISP) {
                     Box(
                         modifier = Modifier
@@ -125,8 +129,8 @@ fun MedicationDetailDialog(
                             )
                             Spacer(modifier = Modifier.size(4.dp))
                             Text(
-                                text = "Certificado ISP",
-                                style = MaterialTheme.typography.labelSmall,
+                                text = if (isEnglish) "ISP Certified" else "Certificado ISP",
+                                fontSize = (fontSize - 4).sp,
                                 color = SuccessGreen,
                                 fontWeight = FontWeight.Medium
                             )
@@ -141,37 +145,41 @@ fun MedicationDetailDialog(
 
             DetailRow(
                 icon = Icons.Default.Science,
-                label = "Principio Activo",
-                value = medication.principioActivo
+                label = if (isEnglish) "Active Ingredient" else "Principio Activo",
+                value = medication.principioActivo,
+                fontSize = fontSize
             )
             DetailRow(
                 icon = Icons.Default.LocalPharmacy,
-                label = "Presentación",
-                value = medication.presentacion
+                label = if (isEnglish) "Presentation" else "Presentación",
+                value = medication.presentacion,
+                fontSize = fontSize
             )
             DetailRow(
                 icon = Icons.Default.Factory,
-                label = "Laboratorio",
-                value = medication.laboratorio
+                label = if (isEnglish) "Laboratory" else "Laboratorio",
+                value = medication.laboratorio,
+                fontSize = fontSize
             )
             DetailRow(
                 icon = Icons.Default.Flag,
-                label = "País de Origen",
-                value = medication.paisOrigen
+                label = if (isEnglish) "Country of Origin" else "País de Origen",
+                value = medication.paisOrigen,
+                fontSize = fontSize
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Descripción",
-                style = MaterialTheme.typography.titleSmall,
+                text = if (isEnglish) "Description" else "Descripción",
+                fontSize = fontSize.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = medication.descripcion,
-                style = MaterialTheme.typography.bodyMedium,
+                fontSize = (fontSize - 2).sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
@@ -181,8 +189,8 @@ fun MedicationDetailDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Alternativas (${alternatives.size})",
-                    style = MaterialTheme.typography.titleSmall,
+                    text = if (isEnglish) "Alternatives (${alternatives.size})" else "Alternativas (${alternatives.size})",
+                    fontSize = fontSize.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -191,7 +199,8 @@ fun MedicationDetailDialog(
                 alternatives.forEach { alternative ->
                     AlternativeItem(
                         medication = alternative,
-                        onClick = { onAlternativeClick(alternative) }
+                        onClick = { onAlternativeClick(alternative) },
+                        fontSize = fontSize
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -204,7 +213,8 @@ fun MedicationDetailDialog(
 private fun DetailRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     label: String,
-    value: String
+    value: String,
+    fontSize: Float
 ) {
     Row(
         modifier = Modifier
@@ -222,12 +232,12 @@ private fun DetailRow(
         Column {
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
+                fontSize = (fontSize - 6).sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = value,
-                style = MaterialTheme.typography.bodyMedium,
+                fontSize = (fontSize - 2).sp,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -237,7 +247,8 @@ private fun DetailRow(
 @Composable
 private fun AlternativeItem(
     medication: Medication,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    fontSize: Float
 ) {
     Card(
         onClick = onClick,
@@ -257,12 +268,12 @@ private fun AlternativeItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = medication.nombre,
-                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = (fontSize - 2).sp,
                     fontWeight = FontWeight.Medium
                 )
                 Text(
                     text = "${medication.tipo} - ${medication.laboratorio}",
-                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = (fontSize - 6).sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
