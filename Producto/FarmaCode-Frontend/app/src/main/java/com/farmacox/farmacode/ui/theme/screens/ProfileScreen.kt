@@ -1,4 +1,4 @@
-package com.farmacox.farmacode.ui.screens
+package com.farmacox.farmacode.ui.theme.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
+import com.farmacox.farmacode.ui.theme.navigation.Screen
 import com.farmacox.farmacode.viewmodel.ProfileViewModel
 
 @Composable
@@ -109,7 +110,7 @@ fun ProfileScreen(
             Column(modifier = Modifier.padding(8.dp)) {
                 // Historial
                 TextButton(
-                    onClick = { navController.navigate("home") },
+                    onClick = { navController.navigate(Screen.Home.route) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -123,7 +124,7 @@ fun ProfileScreen(
 
                 // Ayuda
                 TextButton(
-                    onClick = { navController.navigate("help") },
+                    onClick = { navController.navigate(Screen.Help.route) },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -187,8 +188,8 @@ fun ProfileScreen(
 
         // Cerrar Sesión
         TextButton(
-            onClick = { navController.navigate("login") {
-                popUpTo("home") { inclusive = true }
+            onClick = { navController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Home.route) { inclusive = true }
             }},
             modifier = Modifier.padding(top = 8.dp),
             colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)

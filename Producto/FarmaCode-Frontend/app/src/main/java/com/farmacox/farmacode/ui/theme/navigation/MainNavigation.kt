@@ -30,10 +30,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.farmacode.app.ui.screens.chat.ChatScreen
-import com.farmacox.farmacode.ui.screens.ProfileScreen
+import com.farmacox.farmacode.ui.theme.screens.ProfileScreen
 import com.farmacox.farmacode.ui.theme.screens.HelpScreen
 import com.farmacox.farmacode.ui.theme.screens.HomeScreen
 import com.farmacox.farmacode.ui.theme.screens.LoginScreen
+import com.farmacox.farmacode.ui.theme.screens.RegisterScreen
 import com.farmacox.farmacode.ui.theme.screens.ScannerScreen
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
 
@@ -45,7 +46,7 @@ data class BottomNavItem(
 )
 
 // Pantallas que NO muestran la barra de navegación inferior
-private val screensWithoutBottomBar = listOf(Screen.Login.route)
+private val screensWithoutBottomBar = listOf(Screen.Login.route, Screen.Register.route)
 
 @Composable
 fun MainNavigation(
@@ -114,6 +115,9 @@ fun MainNavigation(
             composable(Screen.Login.route) {
                 LoginScreen(navController = navController)
             }
+            composable(Screen.Register.route) {
+                RegisterScreen(navController = navController)
+            }
             composable(Screen.Home.route) {
                 HomeScreen(
                     isDarkTheme = isDarkTheme, 
@@ -123,10 +127,16 @@ fun MainNavigation(
                 )
             }
             composable(Screen.Scanner.route) {
-                ScannerScreen()
+                ScannerScreen(
+                    fontSize = fontSize,
+                    language = language
+                )
             }
             composable(Screen.Chat.route) {
-                ChatScreen()
+                ChatScreen(
+                    fontSize = fontSize,
+                    language = language
+                )
             }
             composable(Screen.Help.route) {
                 HelpScreen(

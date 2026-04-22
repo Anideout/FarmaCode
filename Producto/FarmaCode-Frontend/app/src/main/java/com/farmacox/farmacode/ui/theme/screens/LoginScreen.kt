@@ -1,5 +1,6 @@
 package com.farmacox.farmacode.ui.theme.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,6 +15,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -23,14 +26,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.farmacox.farmacode.FarmaCodeApp
+import com.farmacox.farmacode.R
 import com.farmacox.farmacode.ui.theme.navigation.Screen
 import com.farmacox.farmacode.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
-    navController: NavController,
-    loginViewModel: LoginViewModel = viewModel()
+    navController: NavController
 ) {
+    val context = LocalContext.current
+    val app = context.applicationContext as FarmaCodeApp
+    val loginViewModel: LoginViewModel = viewModel(
+        factory = LoginViewModel.Factory(app.userRepository)
+    )
+    
     val uiState by loginViewModel.uiState.collectAsState()
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -70,9 +80,10 @@ fun LoginScreen(
                     .background(MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "💊",
-                    fontSize = 36.sp
+                Image(
+                    painter = painterResource(id = R.drawable.logo),
+                    contentDescription = "Logo FarmaCode",
+                    modifier = Modifier.size(60.dp)
                 )
             }
 
@@ -250,7 +261,7 @@ fun LoginScreen(
                             fontSize = 13.sp
                         )
                         TextButton(
-                            onClick = { /* TODO: navegar a registro */ },
+                            onClick = { navController.navigate(Screen.Register.route) },
                             contentPadding = PaddingValues(0.dp)
                         ) {
                             Text(

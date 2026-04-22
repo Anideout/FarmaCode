@@ -44,6 +44,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.farmacox.farmacode.FarmaCodeApp
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
@@ -51,7 +52,10 @@ import com.farmacox.farmacode.viewmodel.ChatMessage
 import com.farmacox.farmacode.viewmodel.ChatViewModel
 
 @Composable
-fun ChatScreen() {
+fun ChatScreen(
+    fontSize: Float,
+    language: String
+) {
     val context = LocalContext.current
     val app = context.applicationContext as FarmaCodeApp
     val viewModel: ChatViewModel = viewModel(
@@ -61,6 +65,7 @@ fun ChatScreen() {
     val uiState by viewModel.uiState.collectAsState()
     var messageText by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
+    val isEnglish = language == "English"
 
     LaunchedEffect(uiState.messages.size) {
         if (uiState.messages.isNotEmpty()) {
@@ -109,14 +114,14 @@ fun ChatScreen() {
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "Asistente IA",
-                            style = MaterialTheme.typography.titleMedium,
+                            text = if (isEnglish) "AI Assistant" else "Asistente IA",
+                            fontSize = (fontSize + 2).sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                         Text(
-                            text = "En línea",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = if (isEnglish) "Online" else "En línea",
+                            fontSize = (fontSize - 2).sp,
                             color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                         )
                     }
@@ -134,7 +139,7 @@ fun ChatScreen() {
                 item { Spacer(modifier = Modifier.height(8.dp)) }
 
                 items(uiState.messages) { message ->
-                    ChatBubble(message = message)
+                    ChatBubble(message = message, fontSize = fontSize)
                 }
 
                 if (uiState.isLoading) {
@@ -173,7 +178,12 @@ fun ChatScreen() {
                     value = messageText,
                     onValueChange = { messageText = it },
                     modifier = Modifier.weight(1f),
-                    placeholder = { Text("Escribe un mensaje...") },
+                    placeholder = { 
+                        Text(
+                            if (isEnglish) "Type a message..." else "Escribe un mensaje...",
+                            fontSize = fontSize.sp
+                        ) 
+                    },
                     shape = RoundedCornerShape(24.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = PrimaryGreen,
@@ -208,7 +218,7 @@ fun ChatScreen() {
 }
 
 @Composable
-private fun ChatBubble(message: ChatMessage) {
+private fun ChatBubble(message: ChatMessage, fontSize: Float) {
     val isUser = message.isUser
 
     Row(
@@ -251,7 +261,7 @@ private fun ChatBubble(message: ChatMessage) {
         ) {
             Text(
                 text = message.content,
-                style = MaterialTheme.typography.bodyMedium,
+                fontSize = fontSize.sp,
                 color = if (isUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

@@ -6,14 +6,17 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.farmacox.farmacode.data.dao.MedicationDao
+import com.farmacox.farmacode.data.dao.UserDao
 import com.farmacox.farmacode.data.dao.entity.Medication
+import com.farmacox.farmacode.data.dao.entity.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Medication::class], version = 1, exportSchema = false)
+@Database(entities = [Medication::class, User::class], version = 2, exportSchema = false)
 abstract class FarmaCodeDB : RoomDatabase() {
     abstract fun medicationDao(): MedicationDao
+    abstract fun userDao(): UserDao
 
     companion object {
         @Volatile
@@ -26,6 +29,7 @@ abstract class FarmaCodeDB : RoomDatabase() {
                     FarmaCodeDB::class.java,
                     "farmacode_database"
                 )
+                    .fallbackToDestructiveMigration()
                     .addCallback(DatabaseCallback())
                     .build()
                 INSTANCE = instance

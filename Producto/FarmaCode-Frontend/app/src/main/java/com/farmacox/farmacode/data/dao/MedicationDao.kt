@@ -1,6 +1,7 @@
 package com.farmacox.farmacode.data.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -15,7 +16,7 @@ interface MedicationDao {
     @Query("SELECT * FROM medications WHERE id = :id")
     suspend fun getMedicationById(id: String): Medication?
 
-    @Query("SELECT * FROM medications WHERe nombre LIKE '%' || :query || '%' || '%' OR principioACtivo LIKE '&' || :query || '%' OR laboratorio LIKE '%' || :query || '%'")
+    @Query("SELECT * FROM medications WHERE nombre LIKE '%' || :query || '%' OR principioActivo LIKE '%' || :query || '%' OR laboratorio LIKE '%' || :query || '%'")
     fun searchMedications(query: String): Flow<List<Medication>>
 
     @Query("SELECT * FROM medications WHERE categoriaTerapeutica = :category")
@@ -29,6 +30,12 @@ interface MedicationDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertALL(medications: List<Medication>)
+    
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMedication(medication: Medication)
+
+    @Delete
+    suspend fun deleteMedication(medication: Medication)
 
     @Query("SELECT COUNT(*) FROM medications")
     suspend fun getCount(): Int

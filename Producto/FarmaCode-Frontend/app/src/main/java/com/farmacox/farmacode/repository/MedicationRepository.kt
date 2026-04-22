@@ -17,4 +17,8 @@ class MedicationRepository(private val medicationDao: MedicationDao) {
     suspend fun getAlternatives(activeIngredient: String, currentId: String): List<Medication> = medicationDao.getAlternatives(activeIngredient, currentId)
 
     fun getAllCategories(): Flow<List<String>> = medicationDao.getAllCategories()
+    
+    suspend fun insertMedication(medication: Medication) = medicationDao.insertMedication(medication)
+    
+    suspend fun deleteMedication(medication: Medication) = medicationDao.deleteMedication(medication)
 }

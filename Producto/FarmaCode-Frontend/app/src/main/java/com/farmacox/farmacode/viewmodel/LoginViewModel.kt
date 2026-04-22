@@ -1,8 +1,12 @@
 package com.farmacox.farmacode.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.farmacox.farmacode.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 data class LoginUiState(
     val email: String = "",
@@ -12,7 +16,7 @@ data class LoginUiState(
     val isLoginSuccessful: Boolean = false
 )
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState
@@ -38,12 +42,26 @@ class LoginViewModel : ViewModel() {
             return
         }
 
-        _uiState.value = state.copy(isLoading = true)
+        viewModelScope.launch {
+            _uiState.value = state.copy(isLoading = true)
+            
+            val user = userRepository.getUserByEmail(state.email)
+            
+            if (user != null && user.password == state.password) {
+                _uiState.value = state.copy(isLoading = false, isLoginSuccessful = true)
+            } else {
+                _uiState.value = state.copy(isLoading = false, errorMessage = "Credenciales incorrectas")
+            }
+        }
+    }
 
-        if (state.email == "admin@farmacode.com" && state.password == "1234") {
-            _uiState.value = state.copy(isLoading = false, isLoginSuccessful = true)
-        } else {
-            _uiState.value = state.copy(isLoading = false, errorMessage = "Credenciales incorrectas")
+    class Factory(private val repository: UserRepository) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(LoginViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return LoginViewModel(repository) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

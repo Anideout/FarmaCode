@@ -34,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -206,6 +207,29 @@ fun MedicationDetailDialog(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TypeBadge(tipo: String, fontSize: Float) {
+    val (backgroundColor, textColor) = when (tipo.uppercase()) {
+        "RX" -> Color(0xFFFD8090).copy(alpha = 0.15f) to Color(0xFFFD8090)
+        "OTC" -> Color(0xFF08DEEA).copy(alpha = 0.15f) to Color(0xFF08DEEA)
+        else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) to MaterialTheme.colorScheme.primary
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+    ) {
+        Text(
+            text = tipo,
+            fontSize = (fontSize - 4).sp,
+            color = textColor,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 

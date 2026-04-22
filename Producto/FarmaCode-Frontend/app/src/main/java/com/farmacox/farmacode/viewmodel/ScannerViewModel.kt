@@ -1,6 +1,5 @@
 package com.farmacox.farmacode.viewmodel
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -9,6 +8,7 @@ import com.farmacox.farmacode.repository.MedicationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class ScannerUiState(
@@ -26,73 +26,95 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
     val uiState: StateFlow<ScannerUiState> = _uiState.asStateFlow()
 
     fun simulateScan(code: String) {
-        _uiState.value = _uiState.value.copy(
-            scannedCode = code,
-            isLoading = true,
-            errorMessage = null,
-            showResult = false
-        )
-
-        viewModelScope.launch {
-            repository.searchMedications(code).collect { medications ->
-                if (medications.isNotEmpty()) {
-                    val medication = medications.first()
-                    val alternatives = repository.getAlternatives(medication.principioActivo, medication.id)
-                    _uiState.value = _uiState.value.copy(
-                        foundMedication = medication,
-                        alternatives = alternatives,
-                        isLoading = false,
-                        showResult = true
-                    )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        showResult = true,
-                        errorMessage = "No se encontró ningún medicamento con el código: $code"
-                    )
-                }
-            }
-        }
-    }
-
-    fun searchByText(query: String) {
-        if (query.isBlank()) return
+        val cleanCode = code.trim()
+        if (_uiState.value.isLoading || _uiState.value.showResult || cleanCode.isBlank()) return
 
         _uiState.value = _uiState.value.copy(
-            scannedCode = query,
+            scannedCode = cleanCode,
             isLoading = true,
             errorMessage = null
         )
 
         viewModelScope.launch {
-            repository.searchMedications(query).collect { medications ->
-                if (medications.isNotEmpty()) {
-                    val medication = medications.first()
-                    val alternatives = repository.getAlternatives(medication.principioActivo, medication.id)
+            try {
+                // Usamos split con el caracter literal '|'
+                val parts = cleanCode.split('|').map { it.trim() }
+                
+                if (parts.size >= 8) {
+                    // Formato extendido: Nombre|Principio|Dosis|Categoria|Presentacion|Laboratorio|Pais|Descripcion
+                    val newMed = Medication(
+                        id = "QR-${System.currentTimeMillis()}",
+                        nombre = parts[0],
+                        principioActivo = parts[1],
+                        dosis = parts[2],
+                        categoriaTerapeutica = parts[3],
+                        presentacion = parts[4],
+                        laboratorio = parts[5],
+                        paisOrigen = parts[6],
+                        descripcion = parts[7],
+                        tipo = if (parts.size > 8) parts[8] else "Nuevo",
+                        certificacionISP = true
+                    )
+                    
+                    repository.insertMedication(newMed)
+                    
                     _uiState.value = _uiState.value.copy(
-                        foundMedication = medication,
-                        alternatives = alternatives,
+                        foundMedication = newMed,
+                        alternatives = emptyList(),
                         isLoading = false,
                         showResult = true
                     )
-                } else {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        showResult = true,
-                        errorMessage = "No se encontró ningún medicamento para: $query"
+                } else if (parts.size >= 4) {
+                    // Formato de 4 partes original (mantenemos compatibilidad)
+                    val newMed = Medication(
+                        id = "QR-${System.currentTimeMillis()}",
+                        nombre = parts[0],
+                        principioActivo = parts[1],
+                        dosis = parts[2],
+                        categoriaTerapeutica = parts[3],
+                        presentacion = "Caja estándar",
+                        laboratorio = "Genérico",
+                        paisOrigen = "Chile",
+                        descripcion = "Medicamento agregado por QR.",
+                        tipo = "Nuevo",
+                        certificacionISP = true
                     )
+                    repository.insertMedication(newMed)
+                    _uiState.value = _uiState.value.copy(foundMedication = newMed, isLoading = false, showResult = true)
+                } else {
+                    // Búsqueda normal
+                    val medications = repository.searchMedications(cleanCode).first()
+                    if (medications.isNotEmpty()) {
+                        val medication = medications.first()
+                        val alternatives = repository.getAlternatives(medication.principioActivo, medication.id)
+                        _uiState.value = _uiState.value.copy(
+                            foundMedication = medication,
+                            alternatives = alternatives,
+                            isLoading = false,
+                            showResult = true
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "No se encontró el medicamento."
+                        )
+                    }
                 }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Error al procesar: ${e.message}"
+                )
             }
         }
     }
 
+    fun searchByText(query: String) {
+        simulateScan(query)
+    }
+
     fun dismissResult() {
-        _uiState.value = _uiState.value.copy(
-            showResult = false,
-            foundMedication = null,
-            alternatives = emptyList(),
-            scannedCode = ""
-        )
+        _uiState.value = _uiState.value.copy(showResult = false, foundMedication = null)
     }
 
     class Factory(private val repository: MedicationRepository) : ViewModelProvider.Factory {
