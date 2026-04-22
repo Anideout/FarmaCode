@@ -42,6 +42,10 @@ data class BottomNavItem(
     val unselectedIcon: ImageVector
 )
 
+
+// Pantallas que NO muestran la barra de navegación inferior
+private val screensWithoutBottomBar = listOf(Screen.Login.route)
+
 @Composable
 fun MainNavigation(
     isDarkTheme: Boolean,
