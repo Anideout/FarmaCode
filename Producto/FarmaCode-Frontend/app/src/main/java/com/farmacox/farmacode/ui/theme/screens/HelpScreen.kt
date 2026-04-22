@@ -39,11 +39,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
 import com.farmacox.farmacode.ui.theme.theme.WarningAmber
 
 @Composable
-fun HelpScreen() {
+fun HelpScreen(
+    fontSize: Float,
+    language: String
+) {
+    val isEnglish = language == "English"
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -66,14 +72,14 @@ fun HelpScreen() {
         ) {
             Column {
                 Text(
-                    text = "Centro de Ayuda",
-                    style = MaterialTheme.typography.headlineMedium,
+                    text = if (isEnglish) "Help Center" else "Centro de Ayuda",
+                    fontSize = (fontSize + 8).sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
                 Text(
-                    text = "Aprende a usar FarmaCode",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = if (isEnglish) "Learn how to use FarmaCode" else "Aprende a usar FarmaCode",
+                    fontSize = fontSize.sp,
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                 )
             }
@@ -84,37 +90,41 @@ fun HelpScreen() {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Cómo usar la aplicación",
-                style = MaterialTheme.typography.titleMedium,
+                text = if (isEnglish) "How to use the app" else "Cómo usar la aplicación",
+                fontSize = (fontSize + 2).sp,
                 fontWeight = FontWeight.SemiBold
             )
 
             HelpStepCard(
                 step = 1,
                 icon = Icons.Default.Search,
-                title = "Buscar medicamentos",
-                description = "Usa la barra de búsqueda para encontrar medicamentos por nombre, principio activo o laboratorio."
+                title = if (isEnglish) "Search medications" else "Buscar medicamentos",
+                description = if (isEnglish) "Use the search bar to find medications by name, active ingredient or lab." else "Usa la barra de búsqueda para encontrar medicamentos por nombre, principio activo o laboratorio.",
+                fontSize = fontSize
             )
 
             HelpStepCard(
                 step = 2,
                 icon = Icons.Default.QrCodeScanner,
-                title = "Escanear código",
-                description = "Usa el escáner para leer el código de barras del medicamento y obtener información instantánea."
+                title = if (isEnglish) "Scan code" else "Escanear código",
+                description = if (isEnglish) "Use the scanner to read the medication's barcode and get instant info." else "Usa el escáner para leer el código de barras del medicamento y obtener información instantánea.",
+                fontSize = fontSize
             )
 
             HelpStepCard(
                 step = 3,
                 icon = Icons.Default.LocalPharmacy,
-                title = "Ver alternativas",
-                description = "Encuentra alternativas genéricas y bioequivalentes con el mismo principio activo."
+                title = if (isEnglish) "View alternatives" else "Ver alternativas",
+                description = if (isEnglish) "Find generic and bioequivalent alternatives with the same active ingredient." else "Encuentra alternativas genéricas y bioequivalentes con el mismo principio activo.",
+                fontSize = fontSize
             )
 
             HelpStepCard(
                 step = 4,
                 icon = Icons.Default.CheckCircle,
-                title = "Verificar certificación",
-                description = "Todos los medicamentos muestran su certificación ISP para garantizar calidad y seguridad."
+                title = if (isEnglish) "Verify certification" else "Verificar certificación",
+                description = if (isEnglish) "All medications show their ISP certification to ensure quality and safety." else "Todos los medicamentos muestran su certificación ISP para garantizar calidad y seguridad.",
+                fontSize = fontSize
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -122,29 +132,33 @@ fun HelpScreen() {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Glosario de términos",
-                style = MaterialTheme.typography.titleMedium,
+                text = if (isEnglish) "Glossary of terms" else "Glosario de términos",
+                fontSize = (fontSize + 2).sp,
                 fontWeight = FontWeight.SemiBold
             )
 
             GlossaryCard(
-                term = "Genérico",
-                definition = "Medicamento que contiene el mismo principio activo que el de referencia, pero puede variar en excipientes y presentación."
+                term = if (isEnglish) "Generic" else "Genérico",
+                definition = if (isEnglish) "Medication that contains the same active ingredient as the reference one, but may vary in excipients." else "Medicamento que contiene el mismo principio activo que el de referencia, pero puede variar en excipientes y presentación.",
+                fontSize = fontSize
             )
 
             GlossaryCard(
-                term = "Bioequivalente",
-                definition = "Medicamento que demuestra tener la misma biodisponibilidad que el medicamento de referencia, garantizando el mismo efecto terapéutico."
+                term = if (isEnglish) "Bioequivalent" else "Bioequivalente",
+                definition = if (isEnglish) "Medication that proves to have the same bioavailability as the reference drug, ensuring the same effect." else "Medicamento que demuestra tener la misma biodisponibilidad que el medicamento de referencia, garantizando el mismo efecto terapéutico.",
+                fontSize = fontSize
             )
 
             GlossaryCard(
-                term = "Referencia",
-                definition = "Medicamento original que ha sido registrado con suficiente documentación científica sobre su eficacia y seguridad."
+                term = if (isEnglish) "Reference" else "Referencia",
+                definition = if (isEnglish) "Original medication registered with enough scientific documentation about its efficacy and safety." else "Medicamento original que ha sido registrado con suficiente documentación científica sobre su eficacia y seguridad.",
+                fontSize = fontSize
             )
 
             GlossaryCard(
-                term = "Principio Activo",
-                definition = "Sustancia responsable de la acción terapéutica del medicamento."
+                term = if (isEnglish) "Active Ingredient" else "Principio Activo",
+                definition = if (isEnglish) "Substance responsible for the therapeutic action of the medication." else "Sustancia responsable de la acción terapéutica del medicamento.",
+                fontSize = fontSize
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -169,52 +183,15 @@ fun HelpScreen() {
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "Aviso de seguridad",
-                            style = MaterialTheme.typography.titleSmall,
+                            text = if (isEnglish) "Safety notice" else "Aviso de seguridad",
+                            fontSize = fontSize.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = WarningAmber
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Esta aplicación es solo informativa. Consulta siempre con un profesional de salud antes de tomar cualquier medicamento. No sustituye el consejo médico profesional.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = PrimaryGreen.copy(alpha = 0.1f)
-                )
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = null,
-                        tint = PrimaryGreen,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = "Certificación ISP",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = PrimaryGreen
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Todos los medicamentos en esta base de datos están certificados por el Instituto de Salud Pública de Chile (ISP).",
-                            style = MaterialTheme.typography.bodySmall,
+                            text = if (isEnglish) "This app is for information only. Always consult a health professional before taking any medication." else "Esta aplicación es solo informativa. Consulta siempre con un profesional de salud antes de tomar cualquier medicamento. No sustituye el consejo médico profesional.",
+                            fontSize = (fontSize - 2).sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -231,7 +208,8 @@ private fun HelpStepCard(
     step: Int,
     icon: ImageVector,
     title: String,
-    description: String
+    description: String,
+    fontSize: Float
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -253,7 +231,7 @@ private fun HelpStepCard(
             ) {
                 Text(
                     text = step.toString(),
-                    style = MaterialTheme.typography.titleMedium,
+                    fontSize = (fontSize + 2).sp,
                     fontWeight = FontWeight.Bold,
                     color = PrimaryGreen
                 )
@@ -270,14 +248,14 @@ private fun HelpStepCard(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = title,
-                        style = MaterialTheme.typography.titleSmall,
+                        fontSize = fontSize.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = description,
-                    style = MaterialTheme.typography.bodySmall,
+                    fontSize = (fontSize - 2).sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
@@ -288,7 +266,8 @@ private fun HelpStepCard(
 @Composable
 private fun GlossaryCard(
     term: String,
-    definition: String
+    definition: String,
+    fontSize: Float
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -302,14 +281,14 @@ private fun GlossaryCard(
         ) {
             Text(
                 text = term,
-                style = MaterialTheme.typography.titleSmall,
+                fontSize = fontSize.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = PrimaryGreen
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = definition,
-                style = MaterialTheme.typography.bodySmall,
+                fontSize = (fontSize - 2).sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }

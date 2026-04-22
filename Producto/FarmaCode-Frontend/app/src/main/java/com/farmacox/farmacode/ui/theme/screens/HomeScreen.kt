@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.farmacox.farmacode.FarmaCodeApp
 import com.farmacox.farmacode.ui.theme.components.MedicationCard
@@ -57,7 +58,9 @@ import com.farmacox.farmacode.viewmodel.HomeViewModel
 @Composable
 fun HomeScreen(
     isDarkTheme: Boolean,
-    onToggleTheme: () -> Unit
+    onToggleTheme: () -> Unit,
+    fontSize: Float,
+    language: String
 ) {
     val context = LocalContext.current
     val app = context.applicationContext as FarmaCodeApp
@@ -68,6 +71,8 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     var showDialog by remember { mutableStateOf(false) }
+
+    val isEnglish = language == "English"
 
     if (uiState.selectedMedication != null) {
         showDialog = true
@@ -106,13 +111,13 @@ fun HomeScreen(
                             Column {
                                 Text(
                                     text = "FarmaCode",
-                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontSize = (fontSize + 8).sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                                 Text(
-                                    text = "Medicamentos certificados ISP",
-                                    style = MaterialTheme.typography.bodyMedium,
+                                    text = if (isEnglish) "ISP Certified Medications" else "Medicamentos certificados ISP",
+                                    fontSize = fontSize.sp,
                                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                                 )
                             }
@@ -132,7 +137,10 @@ fun HomeScreen(
                             onValueChange = { viewModel.onSearchQueryChange(it) },
                             modifier = Modifier.fillMaxWidth(),
                             placeholder = {
-                                Text("Buscar medicamento...")
+                                Text(
+                                    if (isEnglish) "Search medication..." else "Buscar medicamento...",
+                                    fontSize = fontSize.sp
+                                )
                             },
                             leadingIcon = {
                                 Icon(Icons.Default.Search, contentDescription = null)
@@ -157,6 +165,13 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     uiState.categories.forEach { category ->
+                        val translatedCategory = when(category) {
+                            "Todos" -> if(isEnglish) "All" else "Todos"
+                            "Analgésicos" -> if(isEnglish) "Painkillers" else "Analgésicos"
+                            "Antibióticos" -> if(isEnglish) "Antibiotics" else "Antibióticos"
+                            else -> category
+                        }
+
                         val isSelected = category == uiState.selectedCategory ||
                                 (category == "Todos" && uiState.selectedCategory == null)
 
@@ -165,7 +180,7 @@ fun HomeScreen(
                             onClick = {
                                 viewModel.onCategorySelected(if (category == "Todos") null else category)
                             },
-                            label = { Text(category) },
+                            label = { Text(translatedCategory, fontSize = (fontSize - 2).sp) },
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = PrimaryGreen,
                                 selectedLabelColor = MaterialTheme.colorScheme.onPrimary
@@ -191,7 +206,8 @@ fun HomeScreen(
                     MedicationCard(
                         medication = medication,
                         onClick = { viewModel.onMedicationSelected(medication) },
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                        fontSize = fontSize
                     )
                 }
             }
@@ -214,7 +230,9 @@ fun HomeScreen(
                     },
                     onAlternativeClick = { alternative ->
                         viewModel.onMedicationSelected(alternative)
-                    }
+                    },
+                    fontSize = fontSize,
+                    language = language
                 )
             }
         }

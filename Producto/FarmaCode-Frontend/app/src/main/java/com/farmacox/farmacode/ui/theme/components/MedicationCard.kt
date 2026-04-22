@@ -30,6 +30,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.farmacox.farmacode.data.dao.entity.Medication
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
 import com.farmacox.farmacode.ui.theme.theme.SuccessGreen
@@ -38,7 +39,8 @@ import com.farmacox.farmacode.ui.theme.theme.SuccessGreen
 fun MedicationCard(
     medication: Medication,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    fontSize: Float = 16f
 ) {
     Card(
         modifier = modifier
@@ -81,7 +83,7 @@ fun MedicationCard(
                 ) {
                     Text(
                         text = medication.nombre,
-                        style = MaterialTheme.typography.titleMedium,
+                        fontSize = fontSize.sp,
                         fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -101,7 +103,7 @@ fun MedicationCard(
 
                 Text(
                     text = medication.principioActivo,
-                    style = MaterialTheme.typography.bodyMedium,
+                    fontSize = (fontSize - 2).sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -112,8 +114,8 @@ fun MedicationCard(
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    TypeBadge(tipo = medication.tipo)
-                    CategoryBadge(categoria = medication.categoriaTerapeutica)
+                    TypeBadge(tipo = medication.tipo, fontSize = fontSize)
+                    CategoryBadge(categoria = medication.categoriaTerapeutica, fontSize = fontSize)
                 }
             }
         }
@@ -121,7 +123,7 @@ fun MedicationCard(
 }
 
 @Composable
-fun TypeBadge(tipo: String) {
+fun TypeBadge(tipo: String, fontSize: Float) {
     val backgroundColor = when (tipo) {
         "Referencia" -> PrimaryGreen.copy(alpha = 0.15f)
         "Genérico" -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.15f)
@@ -144,7 +146,7 @@ fun TypeBadge(tipo: String) {
     ) {
         Text(
             text = tipo,
-            style = MaterialTheme.typography.labelSmall,
+            fontSize = (fontSize - 4).sp,
             color = textColor,
             fontWeight = FontWeight.Medium
         )
@@ -152,7 +154,7 @@ fun TypeBadge(tipo: String) {
 }
 
 @Composable
-fun CategoryBadge(categoria: String) {
+fun CategoryBadge(categoria: String, fontSize: Float) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(4.dp))
@@ -161,7 +163,7 @@ fun CategoryBadge(categoria: String) {
     ) {
         Text(
             text = categoria,
-            style = MaterialTheme.typography.labelSmall,
+            fontSize = (fontSize - 4).sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
