@@ -31,7 +31,9 @@ import androidx.navigation.compose.rememberNavController
 import com.farmacode.app.ui.screens.chat.ChatScreen
 import com.farmacox.farmacode.ui.theme.screens.HelpScreen
 import com.farmacox.farmacode.ui.theme.screens.HomeScreen
+import com.farmacox.farmacode.ui.theme.screens.LoginScreen
 import com.farmacox.farmacode.ui.theme.screens.ProfileScreen
+import com.farmacox.farmacode.ui.theme.screens.RegisterScreen
 import com.farmacox.farmacode.ui.theme.screens.ScannerScreen
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
 
@@ -40,6 +42,11 @@ data class BottomNavItem(
     val label: String,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
+)
+
+private val screensWithoutBottomBar = listOf(
+    Screen.Login.route,
+    Screen.Register.route
 )
 
 @Composable
@@ -56,48 +63,58 @@ fun MainNavigation(
         BottomNavItem(Screen.Help.route, "Ayuda", Icons.Filled.Help, Icons.Outlined.Help),
         BottomNavItem(Screen.Profile.route, "Perfil", Icons.Filled.Person, Icons.Outlined.Person)
     )
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val showBottomBar = currentRoute !in screensWithoutBottomBar
+
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-
-                items.forEach { item ->
-                    val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
-
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                contentDescription = item.label
-                            )
-                        },
-                        label = { Text(item.label) },
-                        selected = selected,
-                        onClick = {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            if (showBottomBar) {
+                NavigationBar {
+                    val destination = navBackStackEntry?.destination
+                    items.forEach { item ->
+                        val selected = destination?.hierarchy?.any { it.route == item.route } == true
+                        NavigationBarItem(
+                            icon = {
+                                Icon(
+                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = item.label
+                                )
+                            },
+                            label = { Text(item.label) },
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(item.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = PrimaryGreen,
-                            selectedTextColor = PrimaryGreen,
-                            indicatorColor = PrimaryGreen.copy(alpha = 0.1f)
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = PrimaryGreen,
+                                selectedTextColor = PrimaryGreen,
+                                indicatorColor = PrimaryGreen.copy(alpha = 0.1f)
+                            )
                         )
-                    )
+                    }
                 }
             }
         }
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Home.route,
+            startDestination = Screen.Login.route,
             modifier = Modifier.padding(paddingValues)
         ) {
+            composable(Screen.Login.route) {
+                LoginScreen(navController = navController)
+            }
+            composable(Screen.Register.route) {
+                RegisterScreen(navController = navController)
+            }
             composable(Screen.Home.route) {
                 HomeScreen(isDarkTheme = isDarkTheme, onToggleTheme = onToggleTheme)
             }
@@ -115,5 +132,4 @@ fun MainNavigation(
             }
         }
     }
-
 }
