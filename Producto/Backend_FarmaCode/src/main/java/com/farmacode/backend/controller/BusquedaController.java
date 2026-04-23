@@ -47,7 +47,7 @@ public class BusquedaController {
     public ResponseEntity<BioequivalentesResponseDTO> buscarPorNombreComercial(
             @Valid @RequestBody BusquedaRequestDTO request) {
         BioequivalentesResponseDTO respuesta =
-                busquedaService.buscarPorNombreComercial(request.nombreComercial());
+                busquedaService.buscarPorNombreComercial(request.nombre());
         return ResponseEntity.ok(respuesta);
     }
 

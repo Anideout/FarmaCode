@@ -104,6 +104,8 @@ public class MedicamentoService {
                 medicamento.getNombreComercial(),
                 medicamento.getPrincipioActivo() != null
                         ? medicamento.getPrincipioActivo().getNombre() : null,
+                medicamento.getPrincipioActivo() != null
+                        ? medicamento.getPrincipioActivo().getCategoria() : null,
                 medicamento.getLaboratorio() != null
                         ? medicamento.getLaboratorio().getNombre() : null,
                 medicamento.getLaboratorio() != null
@@ -112,7 +114,7 @@ public class MedicamentoService {
                 medicamento.getPresentacion(),
                 medicamento.getAdministracion(),
                 medicamento.getTipo() != null
-                        ? medicamento.getTipo().name() : null,
+                        ? medicamento.getTipo().getLabel() : null,
                 medicamento.getCertIsp(),
                 medicamento.getDescripcion(),
                 precioActual

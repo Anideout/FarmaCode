@@ -1,11 +1,7 @@
 package com.farmacox.farmacode.data.dao.entity
 
-import androidx.room.Entity
-import androidx.room.PrimaryKey
-
-@Entity(tableName = "medications")
 data class Medication(
-    @PrimaryKey val id: String,
+    val id: String,
     val nombre: String,
     val principioActivo: String,
     val dosis: String,
@@ -17,4 +13,3 @@ data class Medication(
     val certificacionISP: Boolean,
     val descripcion: String
 )
-
