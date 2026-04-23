@@ -10,11 +10,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.farmacox.farmacode.FarmaCodeApp
 import com.farmacox.farmacode.ui.theme.navigation.Screen
 import com.farmacox.farmacode.viewmodel.ProfileViewModel
 
@@ -26,9 +29,14 @@ fun ProfileScreen(
     fontSize: Float,
     onFontSizeChange: () -> Unit,
     language: String,
-    onLanguageChange: () -> Unit,
-    viewModel: ProfileViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    onLanguageChange: () -> Unit
 ) {
+    val context = LocalContext.current
+    val app = context.applicationContext as FarmaCodeApp
+    val viewModel: ProfileViewModel = viewModel(
+        factory = ProfileViewModel.Factory(app.userRepository)
+    )
+
     val uiState by viewModel.uiState.collectAsState()
     val isEnglish = language == "English"
 
@@ -45,7 +53,7 @@ fun ProfileScreen(
             "changeFont" to "Change App Font Size",
             "language" to "App Language",
             "close" to "Save & Close",
-            "userLabel" to "Administrator"
+            "userLabel" to "User Profile"
         )
     } else {
         mapOf(
@@ -59,7 +67,7 @@ fun ProfileScreen(
             "changeFont" to "Cambiar Tamaño de Fuente",
             "language" to "Idioma de la App",
             "close" to "Guardar y Cerrar",
-            "userLabel" to "Administrador"
+            "userLabel" to "Perfil de Usuario"
         )
     }
 
@@ -88,13 +96,13 @@ fun ProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = texts["userLabel"]!!, 
+            text = uiState.userName.ifEmpty { texts["userLabel"]!! }, 
             fontSize = (fontSize + 6).sp,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground
         )
         Text(
-            text = uiState.email, 
+            text = uiState.email.ifEmpty { "---" }, 
             fontSize = fontSize.sp,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -108,9 +116,13 @@ fun ProfileScreen(
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
         ) {
             Column(modifier = Modifier.padding(8.dp)) {
-                // Historial
+                // Historial (Navega al Home)
                 TextButton(
-                    onClick = { navController.navigate(Screen.Home.route) },
+                    onClick = { 
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.Home.route) { inclusive = true }
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -124,7 +136,11 @@ fun ProfileScreen(
 
                 // Ayuda
                 TextButton(
-                    onClick = { navController.navigate(Screen.Help.route) },
+                    onClick = { 
+                        navController.navigate(Screen.Help.route) {
+                            launchSingleTop = true
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -175,7 +191,7 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Botón Configuración (Abre el diálogo mejorado)
+        // Botón Configuración
         Button(
             onClick = { viewModel.toggleSettingsCard() },
             modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -188,29 +204,27 @@ fun ProfileScreen(
 
         // Cerrar Sesión
         TextButton(
-            onClick = { navController.navigate(Screen.Login.route) {
-                popUpTo(Screen.Home.route) { inclusive = true }
-            }},
+            onClick = { 
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(0) { inclusive = true }
+                }
+            },
             modifier = Modifier.padding(top = 8.dp),
             colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
         ) {
             Text(texts["logout"]!!, fontSize = fontSize.sp)
         }
 
-        // --- DIÁLOGO DE CONFIGURACIÓN GLOBAL MEJORADO ---
+        // --- DIÁLOGO DE CONFIGURACIÓN GLOBAL ---
         if (uiState.showSettingsCard) {
             Dialog(onDismissRequest = { viewModel.toggleSettingsCard() }) {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
                     shape = RoundedCornerShape(24.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
@@ -219,16 +233,7 @@ fun ProfileScreen(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
-                        
                         Spacer(modifier = Modifier.height(24.dp))
-                        
-                        // Opción de Tamaño de Fuente
-                        Text(
-                            text = texts["changeFont"]!!,
-                            fontSize = (fontSize - 1).sp,
-                            modifier = Modifier.align(Alignment.Start)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
                         Button(
                             onClick = { onFontSizeChange() },
                             modifier = Modifier.fillMaxWidth().height(60.dp),
@@ -237,22 +242,9 @@ fun ProfileScreen(
                         ) {
                             Icon(Icons.Default.TextFields, contentDescription = null)
                             Spacer(Modifier.width(12.dp))
-                            Text(
-                                "Aa (${fontSize.toInt()})",
-                                fontSize = fontSize.sp,
-                                fontWeight = FontWeight.Medium
-                            )
+                            Text("Aa (${fontSize.toInt()})", fontSize = fontSize.sp)
                         }
-                        
                         Spacer(modifier = Modifier.height(20.dp))
-                        
-                        // Opción de Idioma
-                        Text(
-                            text = texts["language"]!!,
-                            fontSize = (fontSize - 1).sp,
-                            modifier = Modifier.align(Alignment.Start)
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
                         Button(
                             onClick = { onLanguageChange() },
                             modifier = Modifier.fillMaxWidth().height(60.dp),
@@ -261,15 +253,9 @@ fun ProfileScreen(
                         ) {
                             Icon(Icons.Default.Language, contentDescription = null)
                             Spacer(Modifier.width(12.dp))
-                            Text(
-                                language,
-                                fontSize = fontSize.sp,
-                                fontWeight = FontWeight.Medium
-                            )
+                            Text(language, fontSize = fontSize.sp)
                         }
-                        
                         Spacer(modifier = Modifier.height(32.dp))
-                        
                         Button(
                             onClick = { viewModel.toggleSettingsCard() },
                             modifier = Modifier.fillMaxWidth().height(50.dp),

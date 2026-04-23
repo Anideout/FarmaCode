@@ -1,14 +1,23 @@
 package com.farmacox.farmacode.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
+import com.farmacox.farmacode.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+
+// Singleton temporal para la sesión (en una app real usarías DataStore o Room)
+object UserSession {
+    var userEmail: String? = null
+}
 
 data class ProfileUiState (
-    val userName: String = "Admin",
-    val email: String = "admin@farmacode.com",
+    val userName: String = "",
+    val email: String = "",
     val isNotificacionsEnabled: Boolean = true,
     val isDarkMode: Boolean = false,
     val showSettingsCard: Boolean = false,
@@ -16,34 +25,37 @@ data class ProfileUiState (
     val language: String = "Español"
 )
 
-class ProfileViewModel: ViewModel() {
+class ProfileViewModel(private val userRepository: UserRepository): ViewModel() {
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
-    fun toggleNotificacions(enabled: Boolean) {
-        _uiState.update { it.copy(isNotificacionsEnabled = enabled)}
+    init {
+        loadUserData()
     }
 
-    fun toggleDarkMode(enabled:Boolean) {
-        _uiState.update { it.copy(isDarkMode = enabled)}
+    private fun loadUserData() {
+        val email = UserSession.userEmail
+        if (email != null) {
+            viewModelScope.launch {
+                val user = userRepository.getUserByEmail(email)
+                if (user != null) {
+                    _uiState.update { it.copy(userName = user.name, email = user.email) }
+                }
+            }
+        }
+    }
+
+    fun toggleNotificacions(enabled: Boolean) {
+        _uiState.update { it.copy(isNotificacionsEnabled = enabled)}
     }
 
     fun toggleSettingsCard() {
         _uiState.update { it.copy(showSettingsCard = !it.showSettingsCard)}
     }
 
-    fun changeFontSize() {
-        //Logica para la font, solo 3 tamaños :3
-        _uiState.update {
-            val newSize = if (it.fontSize < 24f) it.fontSize + 4f else 14f
-            it.copy(fontSize = newSize)
-        }
-    }
-
-    fun changeLanguage() {
-        _uiState.update {
-            val newLang = if (it.language == "Español") "English" else "Español"
-            it.copy(language = newLang)
+    class Factory(private val repository: UserRepository) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return ProfileViewModel(repository) as T
         }
     }
 }

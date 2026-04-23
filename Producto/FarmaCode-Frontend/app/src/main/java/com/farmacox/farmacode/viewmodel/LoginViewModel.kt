@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.farmacox.farmacode.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class LoginUiState(
@@ -19,7 +20,7 @@ data class LoginUiState(
 class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
-    val uiState: StateFlow<LoginUiState> = _uiState
+    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
     fun onEmailChange(email: String) {
         _uiState.value = _uiState.value.copy(email = email, errorMessage = null)
@@ -48,6 +49,8 @@ class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
             val user = userRepository.getUserByEmail(state.email)
             
             if (user != null && user.password == state.password) {
+                // GUARDAR SESION
+                UserSession.userEmail = user.email
                 _uiState.value = state.copy(isLoading = false, isLoginSuccessful = true)
             } else {
                 _uiState.value = state.copy(isLoading = false, errorMessage = "Credenciales incorrectas")
