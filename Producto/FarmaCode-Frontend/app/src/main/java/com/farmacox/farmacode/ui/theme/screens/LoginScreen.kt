@@ -3,6 +3,7 @@ package com.farmacox.farmacode.ui.theme.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -15,6 +16,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -60,7 +63,7 @@ fun LoginScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(260.dp)
+                .height(280.dp)
                 .background(MaterialTheme.colorScheme.primary)
         )
 
@@ -71,47 +74,54 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            Spacer(modifier = Modifier.height(72.dp))
+            Spacer(modifier = Modifier.height(60.dp))
 
-            Box(
+            Surface(
                 modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(MaterialTheme.colorScheme.surface),
-                contentAlignment = Alignment.Center
+                    .size(100.dp)
+                    .clip(CircleShape),
+                color = Color.White,
+                tonalElevation = 8.dp,
+                shadowElevation = 8.dp
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.logo),
-                    contentDescription = "Logo FarmaCode",
-                    modifier = Modifier.size(60.dp)
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.padding(12.dp)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo),
+                        contentDescription = "Logo FarmaCode",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "FarmaCode",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.onPrimary
             )
 
             Text(
                 text = "Tu farmacia inteligente",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
                 modifier = Modifier.padding(top = 4.dp)
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surface
                 ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -122,8 +132,8 @@ fun LoginScreen(
 
                     Text(
                         text = "Iniciar sesión",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(bottom = 24.dp)
                     )
@@ -143,12 +153,11 @@ fun LoginScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         isError = uiState.errorMessage != null,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                            focusedLabelColor = MaterialTheme.colorScheme.primary,
-                            cursorColor = MaterialTheme.colorScheme.primary
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                            focusedLabelColor = MaterialTheme.colorScheme.primary
                         )
                     )
 
@@ -185,12 +194,11 @@ fun LoginScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         isError = uiState.errorMessage != null,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                            focusedLabelColor = MaterialTheme.colorScheme.primary,
-                            cursorColor = MaterialTheme.colorScheme.primary
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                            focusedLabelColor = MaterialTheme.colorScheme.primary
                         )
                     )
 
@@ -201,7 +209,7 @@ fun LoginScreen(
                             fontSize = 12.sp,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = 6.dp),
+                                .padding(top = 8.dp, start = 4.dp),
                             textAlign = TextAlign.Start
                         )
                     }
@@ -215,41 +223,41 @@ fun LoginScreen(
                         Text(
                             text = "¿Olvidaste tu contraseña?",
                             color = MaterialTheme.colorScheme.primary,
-                            fontSize = 13.sp
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Button(
                         onClick = { loginViewModel.onLoginClick() },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(52.dp),
+                            .height(56.dp),
                         enabled = !uiState.isLoading,
-                        shape = RoundedCornerShape(12.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
-                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                            disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+                            contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
                         if (uiState.isLoading) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(22.dp),
+                                modifier = Modifier.size(24.dp),
                                 color = MaterialTheme.colorScheme.onPrimary,
-                                strokeWidth = 2.5.dp
+                                strokeWidth = 3.dp
                             )
                         } else {
                             Text(
                                 text = "Ingresar",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Row(
                         horizontalArrangement = Arrangement.Center,
@@ -258,7 +266,7 @@ fun LoginScreen(
                         Text(
                             text = "¿No tienes cuenta? ",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 13.sp
+                            fontSize = 14.sp
                         )
                         TextButton(
                             onClick = { navController.navigate(Screen.Register.route) },
@@ -267,8 +275,8 @@ fun LoginScreen(
                             Text(
                                 text = "Regístrate",
                                 color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp
                             )
                         }
                     }
