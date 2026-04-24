@@ -57,6 +57,13 @@ CREATE TABLE IF NOT EXISTS medicamento (
         FOREIGN KEY (laboratorio_id) REFERENCES laboratorio (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Eliminar duplicados de medicamento (por si existen de ejecuciones anteriores)
+DELETE m1 FROM medicamento m1
+INNER JOIN medicamento m2 ON m1.nombre_comercial = m2.nombre_comercial AND m1.id > m2.id;
+
+-- Agregar unique key si no existe
+ALTER TABLE medicamento ADD UNIQUE IF NOT EXISTS uq_medicamento_nombre (nombre_comercial);
+
 -- -------------------------------------------------------------
 -- Tabla: precio
 -- Historial de precios de un medicamento (vigente = TRUE = precio actual)

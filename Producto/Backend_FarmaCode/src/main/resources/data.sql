@@ -553,156 +553,114 @@ VALUES
 -- =============================================================
 
 -- --- Paracetamol ---
--- Tapsin (~$2.500)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tapsin'), 2490.00, 'Farmacias Ahumada', TRUE);
-
--- Kitadol (~$1.800)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tapsin' LIMIT 1), 2490.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Kitadol'), 1790.00, 'Cruz Verde', TRUE);
-
--- Paracetamol Mintlab (~$800)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Kitadol' LIMIT 1), 1790.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Paracetamol Mintlab'), 790.00, 'Salcobrand', TRUE);
-
--- Panadol (~$3.200)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Paracetamol Mintlab' LIMIT 1), 790.00, 'Salcobrand', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Panadol'), 3190.00, 'Farmacias Ahumada', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Panadol' LIMIT 1), 3190.00, 'Farmacias Ahumada', TRUE);
 
 -- --- Ácido acetilsalicílico ---
--- Aspirina (~$2.800)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Aspirina'), 2790.00, 'Farmacias Ahumada', TRUE);
-
--- Coliaspirina (~$1.900)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Aspirina' LIMIT 1), 2790.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Coliaspirina'), 1890.00, 'Cruz Verde', TRUE);
-
--- AAS Saval (~$1.200)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Coliaspirina' LIMIT 1), 1890.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'AAS Saval'), 1190.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'AAS Saval' LIMIT 1), 1190.00, 'Salcobrand', TRUE);
 
 -- --- Clonazepam ---
--- Ravotril (~$5.500)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ravotril'), 5490.00, 'Farmacias Ahumada', TRUE);
-
--- Clonazepam Recalcine (~$2.200)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ravotril' LIMIT 1), 5490.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Clonazepam Recalcine'), 2190.00, 'Cruz Verde', TRUE);
-
--- Clonazepam Mintlab (~$1.500)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Clonazepam Recalcine' LIMIT 1), 2190.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Clonazepam Mintlab'), 1490.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Clonazepam Mintlab' LIMIT 1), 1490.00, 'Salcobrand', TRUE);
 
 -- --- Tramadol ---
--- Zaldiar (~$7.800)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Zaldiar'), 7790.00, 'Farmacias Ahumada', TRUE);
-
--- Tramadol Andrómaco (~$3.500)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Zaldiar' LIMIT 1), 7790.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tramadol Andrómaco'), 3490.00, 'Cruz Verde', TRUE);
-
--- Tramadol Saval (~$4.200)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tramadol Andrómaco' LIMIT 1), 3490.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tramadol Saval'), 4190.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tramadol Saval' LIMIT 1), 4190.00, 'Salcobrand', TRUE);
 
 -- --- Omeprazol ---
--- Losec (~$8.900)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Losec'), 8890.00, 'Farmacias Ahumada', TRUE);
-
--- Omeprazol Recalcine (~$2.900)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Losec' LIMIT 1), 8890.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Omeprazol Recalcine'), 2890.00, 'Cruz Verde', TRUE);
-
--- Omeprazol Mintlab (~$1.400)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Omeprazol Recalcine' LIMIT 1), 2890.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Omeprazol Mintlab'), 1390.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Omeprazol Mintlab' LIMIT 1), 1390.00, 'Salcobrand', TRUE);
 
 -- --- Ibuprofeno ---
--- Brufen (~$3.600)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Brufen'), 3590.00, 'Farmacias Ahumada', TRUE);
-
--- Ibuprofeno Saval (~$1.600)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Brufen' LIMIT 1), 3590.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ibuprofeno Saval'), 1590.00, 'Cruz Verde', TRUE);
-
--- Ibuprofeno Andrómaco (~$990)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ibuprofeno Saval' LIMIT 1), 1590.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ibuprofeno Andrómaco'), 990.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ibuprofeno Andrómaco' LIMIT 1), 990.00, 'Salcobrand', TRUE);
 
 -- --- Diclofenaco ---
--- Voltaren (~$4.800)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Voltaren'), 4790.00, 'Farmacias Ahumada', TRUE);
-
--- Diclofenaco Recalcine (~$1.800)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Voltaren' LIMIT 1), 4790.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Diclofenaco Recalcine'), 1790.00, 'Cruz Verde', TRUE);
-
--- Diclofenaco Saval inyectable (~$3.200)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Diclofenaco Recalcine' LIMIT 1), 1790.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Diclofenaco Saval'), 3190.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Diclofenaco Saval' LIMIT 1), 3190.00, 'Salcobrand', TRUE);
 
 -- --- Amoxicilina ---
--- Amoxil (~$6.500)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxil'), 6490.00, 'Farmacias Ahumada', TRUE);
-
--- Amoxicilina Mintlab (~$2.400)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxil' LIMIT 1), 6490.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxicilina Mintlab'), 2390.00, 'Cruz Verde', TRUE);
-
--- Amoxicilina Andrómaco pediátrica (~$3.800)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxicilina Mintlab' LIMIT 1), 2390.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxicilina Andrómaco'), 3790.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxicilina Andrómaco' LIMIT 1), 3790.00, 'Salcobrand', TRUE);
 
 -- --- Sertralina ---
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Sertralina'), 3490.00, 'Cruz Verde', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Sertralina' LIMIT 1), 3490.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Sertralina Ref'), 12990.00, 'Farmacias Ahumada', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Sertralina Ref' LIMIT 1), 12990.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Sertralina Recalcine'), 4290.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Sertralina Recalcine' LIMIT 1), 4290.00, 'Salcobrand', TRUE);
 
 -- --- Atorvastatina ---
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Atorvastatina'), 2990.00, 'Cruz Verde', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Atorvastatina' LIMIT 1), 2990.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'AtorvaBio'), 3490.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'AtorvaBio' LIMIT 1), 3490.00, 'Salcobrand', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Lipitor'), 14990.00, 'Farmacias Ahumada', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Lipitor' LIMIT 1), 14990.00, 'Farmacias Ahumada', TRUE);
 
 -- --- Losartán ---
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Losartán'), 2190.00, 'Cruz Verde', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Losartán' LIMIT 1), 2190.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Cozaar'), 11990.00, 'Farmacias Ahumada', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Cozaar' LIMIT 1), 11990.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Losartán Recalcine'), 2890.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Losartán Recalcine' LIMIT 1), 2890.00, 'Salcobrand', TRUE);
 
 -- --- Enalapril ---
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Enalapril'), 1390.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Enalapril' LIMIT 1), 1390.00, 'Salcobrand', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Renitec'), 8990.00, 'Farmacias Ahumada', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Renitec' LIMIT 1), 8990.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Enalapril Mintlab'), 1190.00, 'Cruz Verde', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Enalapril Mintlab' LIMIT 1), 1190.00, 'Cruz Verde', TRUE);
 
 -- --- Metformina ---
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Metformina'), 1990.00, 'Cruz Verde', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Metformina' LIMIT 1), 1990.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Glucophage'), 9990.00, 'Farmacias Ahumada', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Glucophage' LIMIT 1), 9990.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Metformina Saval'), 1590.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Metformina Saval' LIMIT 1), 1590.00, 'Salcobrand', TRUE);
 
 -- --- Aspirina Protect ---
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Aspirina Protect'), 3990.00, 'Farmacias Ahumada', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Aspirina Protect' LIMIT 1), 3990.00, 'Farmacias Ahumada', TRUE);
 
 -- =============================================================
 -- Usuario de prueba (ID=1 - usado por HistorialController)
