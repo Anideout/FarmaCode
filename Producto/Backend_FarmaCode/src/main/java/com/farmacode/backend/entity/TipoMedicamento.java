@@ -9,7 +9,17 @@ package com.farmacode.backend.entity;
  * </ul>
  */
 public enum TipoMedicamento {
-    GENERICO,
-    REFERENCIA,
-    BIOEQUIVALENTE
+    GENERICO("Genérico"),
+    REFERENCIA("Referencia"),
+    BIOEQUIVALENTE("Bioequivalente");
+
+    private final String label;
+
+    TipoMedicamento(String label) {
+        this.label = label;
+    }
+
+    public String getLabel() {
+        return label;
+    }
 }

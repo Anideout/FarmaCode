@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(java -version)",
+      "PowerShell($env:JAVA_HOME)"
+    ]
+  }
+}

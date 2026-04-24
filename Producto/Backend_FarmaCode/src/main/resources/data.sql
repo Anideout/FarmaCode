@@ -10,7 +10,7 @@
 INSERT IGNORE INTO principio_activo (nombre, descripcion, categoria) VALUES
 ('Paracetamol',
  'Analgésico y antipirético ampliamente utilizado. Inhibe la síntesis de prostaglandinas en el sistema nervioso central.',
- 'Analgésico'),
+ 'Analgésico/Antipirético'),
 ('Ácido acetilsalicílico',
  'Antiinflamatorio no esteroideo (AINE) con propiedades analgésicas, antipiréticas y antiagregantes plaquetarias.',
  'Analgésico/Antiinflamatorio'),
@@ -21,17 +21,32 @@ INSERT IGNORE INTO principio_activo (nombre, descripcion, categoria) VALUES
  'Analgésico opiáceo de acción central, indicado para dolores moderados a severos.',
  'Analgésico opioide'),
 ('Omeprazol',
- 'Inhibidor de la bomba de protones. Reduce la secreción de ácido gástrico.',
- 'Inhibidor bomba de protones'),
+ 'Inhibidor de la bomba de protones. Reduce la secreción de ácido gástrico. Indicado para úlceras gástricas, duodenales y reflujo gastroesofágico.',
+ 'Antiulceroso'),
 ('Ibuprofeno',
- 'Antiinflamatorio no esteroideo (AINE). Inhibe las enzimas COX-1 y COX-2.',
- 'Antiinflamatorio AINE'),
+ 'Antiinflamatorio no esteroideo (AINE). Tiene propiedades analgésicas, antiinflamatorias y antipiréticas. Inhibe las enzimas COX-1 y COX-2.',
+ 'Antiinflamatorio'),
 ('Diclofenaco',
  'Antiinflamatorio no esteroideo (AINE) con marcada actividad antiinflamatoria y analgésica.',
  'Antiinflamatorio AINE'),
 ('Amoxicilina',
  'Antibiótico betalactámico de amplio espectro. Inhibe la síntesis de la pared celular bacteriana.',
- 'Antibiótico');
+ 'Antibiótico'),
+('Sertralina',
+ 'Antidepresivo inhibidor selectivo de la recaptación de serotonina (ISRS). Se utiliza para tratar la depresión, trastorno de pánico, trastorno de ansiedad social y trastorno obsesivo-compulsivo.',
+ 'Antidepresivo'),
+('Atorvastatina',
+ 'Estatina que reduce el colesterol LDL y los triglicéridos. Disminuye el riesgo de enfermedades cardiovasculares en pacientes con hipercolesterolemia.',
+ 'Hipolipemiante'),
+('Losartán',
+ 'Antagonista de los receptores de angiotensina II. Se utiliza para tratar la hipertensión arterial y proteger los riñones en pacientes diabéticos.',
+ 'Antihipertensivo'),
+('Enalapril',
+ 'Inhibidor de la enzima convertidora de angiotensina (IECA). Trata la hipertensión y la insuficiencia cardíaca congestiva.',
+ 'Antihipertensivo'),
+('Metformina',
+ 'Antidiabético oral biguanida. Primera línea de tratamiento para diabetes tipo 2. Mejora la sensibilidad a la insulina y reduce la producción hepática de glucosa.',
+ 'Antidiabético');
 
 -- -------------------------------------------------------------
 -- Laboratorios chilenos y extranjeros con presencia en Chile
@@ -43,6 +58,10 @@ INSERT IGNORE INTO laboratorio (nombre, pais) VALUES
 ('Bagó', 'Argentina'),
 ('Andrómaco', 'Chile'),
 ('Chile Lab', 'Chile'),
+('Chile Labs', 'Chile'),
+('Chile Laboratorios', 'Chile'),
+('Chile Pharma', 'Chile'),
+('Chile Med', 'Chile'),
 ('Bayer', 'Alemania'),
 ('Pfizer', 'Estados Unidos'),
 ('GlaxoSmithKline', 'Reino Unido'),
@@ -338,118 +357,310 @@ VALUES
  (SELECT id FROM principio_activo WHERE nombre = 'Amoxicilina'),
  (SELECT id FROM laboratorio WHERE nombre = 'Andrómaco'));
 
+-- -------------------------------------------------------------
+-- Medicamentos: Sertralina
+-- -------------------------------------------------------------
+INSERT IGNORE INTO medicamento (nombre_comercial, dosis, presentacion, administracion, tipo, cert_isp, descripcion, principio_activo_id, laboratorio_id)
+VALUES
+('Sertralina',
+ '50mg',
+ '28 comprimidos',
+ 'Oral',
+ 'GENERICO',
+ TRUE,
+ 'Antidepresivo ISRS genérico certificado por el ISP.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Sertralina'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Chile Laboratorios')),
+
+('Sertralina Ref',
+ '50mg',
+ '28 comprimidos',
+ 'Oral',
+ 'REFERENCIA',
+ TRUE,
+ 'Medicamento de referencia para Sertralina. Antidepresivo ISRS de primera línea con amplia evidencia clínica.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Sertralina'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Pfizer')),
+
+('Sertralina Recalcine',
+ '50mg',
+ '28 comprimidos',
+ 'Oral',
+ 'BIOEQUIVALENTE',
+ TRUE,
+ 'Sertralina bioequivalente certificada por el ISP. Misma eficacia y seguridad que el medicamento de referencia.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Sertralina'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Recalcine'));
+
+-- -------------------------------------------------------------
+-- Medicamentos: Atorvastatina
+-- -------------------------------------------------------------
+INSERT IGNORE INTO medicamento (nombre_comercial, dosis, presentacion, administracion, tipo, cert_isp, descripcion, principio_activo_id, laboratorio_id)
+VALUES
+('Atorvastatina',
+ '20mg',
+ '30 comprimidos',
+ 'Oral',
+ 'GENERICO',
+ TRUE,
+ 'Estatina genérica para reducción de colesterol LDL.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Atorvastatina'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Chile Lab')),
+
+('AtorvaBio',
+ '20mg',
+ '30 comprimidos',
+ 'Oral',
+ 'BIOEQUIVALENTE',
+ TRUE,
+ 'Estatina bioequivalente. Demuestra equivalencia terapéutica con el medicamento de referencia. Misma eficacia y seguridad.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Atorvastatina'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Chile Pharma')),
+
+('Lipitor',
+ '20mg',
+ '30 comprimidos',
+ 'Oral',
+ 'REFERENCIA',
+ TRUE,
+ 'Medicamento de referencia para Atorvastatina. Amplia evidencia en reducción de riesgo cardiovascular.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Atorvastatina'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Pfizer'));
+
+-- -------------------------------------------------------------
+-- Medicamentos: Losartán
+-- -------------------------------------------------------------
+INSERT IGNORE INTO medicamento (nombre_comercial, dosis, presentacion, administracion, tipo, cert_isp, descripcion, principio_activo_id, laboratorio_id)
+VALUES
+('Losartán',
+ '50mg',
+ '30 comprimidos',
+ 'Oral',
+ 'GENERICO',
+ TRUE,
+ 'Antihipertensivo ARA-II genérico certificado por el ISP.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Losartán'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Chile Labs')),
+
+('Cozaar',
+ '50mg',
+ '28 comprimidos',
+ 'Oral',
+ 'REFERENCIA',
+ TRUE,
+ 'Medicamento de referencia para Losartán. Tratamiento de primera línea para hipertensión arterial.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Losartán'),
+ (SELECT id FROM laboratorio WHERE nombre = 'GlaxoSmithKline')),
+
+('Losartán Recalcine',
+ '50mg',
+ '30 comprimidos',
+ 'Oral',
+ 'BIOEQUIVALENTE',
+ TRUE,
+ 'Losartán bioequivalente certificado por el ISP.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Losartán'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Recalcine'));
+
+-- -------------------------------------------------------------
+-- Medicamentos: Enalapril
+-- -------------------------------------------------------------
+INSERT IGNORE INTO medicamento (nombre_comercial, dosis, presentacion, administracion, tipo, cert_isp, descripcion, principio_activo_id, laboratorio_id)
+VALUES
+('Enalapril',
+ '10mg',
+ '30 comprimidos',
+ 'Oral',
+ 'GENERICO',
+ TRUE,
+ 'IECA genérico para tratamiento de hipertensión arterial e insuficiencia cardíaca.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Enalapril'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Chile Labs')),
+
+('Renitec',
+ '10mg',
+ '28 comprimidos',
+ 'Oral',
+ 'REFERENCIA',
+ TRUE,
+ 'Medicamento de referencia para Enalapril. Ampliamente utilizado en hipertensión e insuficiencia cardíaca.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Enalapril'),
+ (SELECT id FROM laboratorio WHERE nombre = 'GlaxoSmithKline')),
+
+('Enalapril Mintlab',
+ '5mg',
+ '30 comprimidos',
+ 'Oral',
+ 'BIOEQUIVALENTE',
+ TRUE,
+ 'Enalapril bioequivalente en dosis inicial para pacientes nuevos.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Enalapril'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Mintlab'));
+
+-- -------------------------------------------------------------
+-- Medicamentos: Metformina
+-- -------------------------------------------------------------
+INSERT IGNORE INTO medicamento (nombre_comercial, dosis, presentacion, administracion, tipo, cert_isp, descripcion, principio_activo_id, laboratorio_id)
+VALUES
+('Metformina',
+ '850mg',
+ '30 comprimidos',
+ 'Oral',
+ 'GENERICO',
+ TRUE,
+ 'Antidiabético oral de primera línea para diabetes tipo 2.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Metformina'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Chile Med')),
+
+('Glucophage',
+ '850mg',
+ '30 comprimidos',
+ 'Oral',
+ 'REFERENCIA',
+ TRUE,
+ 'Medicamento de referencia para Metformina. Primera línea en el tratamiento de diabetes tipo 2.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Metformina'),
+ (SELECT id FROM laboratorio WHERE nombre = 'GlaxoSmithKline')),
+
+('Metformina Saval',
+ '500mg',
+ '30 comprimidos',
+ 'Oral',
+ 'BIOEQUIVALENTE',
+ TRUE,
+ 'Metformina bioequivalente en dosis inicial para pacientes nuevos o con menor tolerancia.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Metformina'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Saval'));
+
+-- -------------------------------------------------------------
+-- Medicamento adicional: Aspirina Protect (Ácido acetilsalicílico - baja dosis)
+-- -------------------------------------------------------------
+INSERT IGNORE INTO medicamento (nombre_comercial, dosis, presentacion, administracion, tipo, cert_isp, descripcion, principio_activo_id, laboratorio_id)
+VALUES
+('Aspirina Protect',
+ '100mg',
+ '30 comprimidos',
+ 'Oral',
+ 'REFERENCIA',
+ TRUE,
+ 'Antiinflamatorio y antiagregante plaquetario. Baja dosis para prevención cardiovascular. Alta dosis para dolor y fiebre.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Ácido acetilsalicílico'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Bayer'));
+
 -- =============================================================
 -- PRECIOS (valores referenciales en CLP - pesos chilenos)
 -- vigente = 1 indica el precio actualmente válido
 -- =============================================================
 
 -- --- Paracetamol ---
--- Tapsin (~$2.500)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tapsin'), 2490.00, 'Farmacias Ahumada', TRUE);
-
--- Kitadol (~$1.800)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tapsin' LIMIT 1), 2490.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Kitadol'), 1790.00, 'Cruz Verde', TRUE);
-
--- Paracetamol Mintlab (~$800)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Kitadol' LIMIT 1), 1790.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Paracetamol Mintlab'), 790.00, 'Salcobrand', TRUE);
-
--- Panadol (~$3.200)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Paracetamol Mintlab' LIMIT 1), 790.00, 'Salcobrand', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Panadol'), 3190.00, 'Farmacias Ahumada', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Panadol' LIMIT 1), 3190.00, 'Farmacias Ahumada', TRUE);
 
 -- --- Ácido acetilsalicílico ---
--- Aspirina (~$2.800)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Aspirina'), 2790.00, 'Farmacias Ahumada', TRUE);
-
--- Coliaspirina (~$1.900)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Aspirina' LIMIT 1), 2790.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Coliaspirina'), 1890.00, 'Cruz Verde', TRUE);
-
--- AAS Saval (~$1.200)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Coliaspirina' LIMIT 1), 1890.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'AAS Saval'), 1190.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'AAS Saval' LIMIT 1), 1190.00, 'Salcobrand', TRUE);
 
 -- --- Clonazepam ---
--- Ravotril (~$5.500)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ravotril'), 5490.00, 'Farmacias Ahumada', TRUE);
-
--- Clonazepam Recalcine (~$2.200)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ravotril' LIMIT 1), 5490.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Clonazepam Recalcine'), 2190.00, 'Cruz Verde', TRUE);
-
--- Clonazepam Mintlab (~$1.500)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Clonazepam Recalcine' LIMIT 1), 2190.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Clonazepam Mintlab'), 1490.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Clonazepam Mintlab' LIMIT 1), 1490.00, 'Salcobrand', TRUE);
 
 -- --- Tramadol ---
--- Zaldiar (~$7.800)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Zaldiar'), 7790.00, 'Farmacias Ahumada', TRUE);
-
--- Tramadol Andrómaco (~$3.500)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Zaldiar' LIMIT 1), 7790.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tramadol Andrómaco'), 3490.00, 'Cruz Verde', TRUE);
-
--- Tramadol Saval (~$4.200)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tramadol Andrómaco' LIMIT 1), 3490.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tramadol Saval'), 4190.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Tramadol Saval' LIMIT 1), 4190.00, 'Salcobrand', TRUE);
 
 -- --- Omeprazol ---
--- Losec (~$8.900)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Losec'), 8890.00, 'Farmacias Ahumada', TRUE);
-
--- Omeprazol Recalcine (~$2.900)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Losec' LIMIT 1), 8890.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Omeprazol Recalcine'), 2890.00, 'Cruz Verde', TRUE);
-
--- Omeprazol Mintlab (~$1.400)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Omeprazol Recalcine' LIMIT 1), 2890.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Omeprazol Mintlab'), 1390.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Omeprazol Mintlab' LIMIT 1), 1390.00, 'Salcobrand', TRUE);
 
 -- --- Ibuprofeno ---
--- Brufen (~$3.600)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Brufen'), 3590.00, 'Farmacias Ahumada', TRUE);
-
--- Ibuprofeno Saval (~$1.600)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Brufen' LIMIT 1), 3590.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ibuprofeno Saval'), 1590.00, 'Cruz Verde', TRUE);
-
--- Ibuprofeno Andrómaco (~$990)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ibuprofeno Saval' LIMIT 1), 1590.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ibuprofeno Andrómaco'), 990.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Ibuprofeno Andrómaco' LIMIT 1), 990.00, 'Salcobrand', TRUE);
 
 -- --- Diclofenaco ---
--- Voltaren (~$4.800)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Voltaren'), 4790.00, 'Farmacias Ahumada', TRUE);
-
--- Diclofenaco Recalcine (~$1.800)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Voltaren' LIMIT 1), 4790.00, 'Farmacias Ahumada', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Diclofenaco Recalcine'), 1790.00, 'Cruz Verde', TRUE);
-
--- Diclofenaco Saval inyectable (~$3.200)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Diclofenaco Recalcine' LIMIT 1), 1790.00, 'Cruz Verde', TRUE);
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Diclofenaco Saval'), 3190.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Diclofenaco Saval' LIMIT 1), 3190.00, 'Salcobrand', TRUE);
 
 -- --- Amoxicilina ---
--- Amoxil (~$6.500)
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxil'), 6490.00, 'Farmacias Ahumada', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxil' LIMIT 1), 6490.00, 'Farmacias Ahumada', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxicilina Mintlab' LIMIT 1), 2390.00, 'Cruz Verde', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxicilina Andrómaco' LIMIT 1), 3790.00, 'Salcobrand', TRUE);
 
--- Amoxicilina Mintlab (~$2.400)
+-- --- Sertralina ---
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxicilina Mintlab'), 2390.00, 'Cruz Verde', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Sertralina' LIMIT 1), 3490.00, 'Cruz Verde', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Sertralina Ref' LIMIT 1), 12990.00, 'Farmacias Ahumada', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Sertralina Recalcine' LIMIT 1), 4290.00, 'Salcobrand', TRUE);
 
--- Amoxicilina Andrómaco pediátrica (~$3.800)
+-- --- Atorvastatina ---
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
-VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Amoxicilina Andrómaco'), 3790.00, 'Salcobrand', TRUE);
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Atorvastatina' LIMIT 1), 2990.00, 'Cruz Verde', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'AtorvaBio' LIMIT 1), 3490.00, 'Salcobrand', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Lipitor' LIMIT 1), 14990.00, 'Farmacias Ahumada', TRUE);
+
+-- --- Losartán ---
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Losartán' LIMIT 1), 2190.00, 'Cruz Verde', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Cozaar' LIMIT 1), 11990.00, 'Farmacias Ahumada', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Losartán Recalcine' LIMIT 1), 2890.00, 'Salcobrand', TRUE);
+
+-- --- Enalapril ---
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Enalapril' LIMIT 1), 1390.00, 'Salcobrand', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Renitec' LIMIT 1), 8990.00, 'Farmacias Ahumada', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Enalapril Mintlab' LIMIT 1), 1190.00, 'Cruz Verde', TRUE);
+
+-- --- Metformina ---
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Metformina' LIMIT 1), 1990.00, 'Cruz Verde', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Glucophage' LIMIT 1), 9990.00, 'Farmacias Ahumada', TRUE);
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Metformina Saval' LIMIT 1), 1590.00, 'Salcobrand', TRUE);
+
+-- --- Aspirina Protect ---
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Aspirina Protect' LIMIT 1), 3990.00, 'Farmacias Ahumada', TRUE);
 
 -- =============================================================
 -- Usuario de prueba (ID=1 - usado por HistorialController)

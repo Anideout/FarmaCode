@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS medicamento (
     created_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
+    UNIQUE KEY uq_medicamento_nombre (nombre_comercial),
     CONSTRAINT fk_medicamento_principio_activo
         FOREIGN KEY (principio_activo_id) REFERENCES principio_activo (id),
     CONSTRAINT fk_medicamento_laboratorio
