@@ -1,4 +1,4 @@
-package com.farmacox.farmacode.ui.theme.theme
+package com.farmacox.farmacode.ui
 
 import androidx.compose.ui.graphics.Color
 

@@ -1,4 +1,4 @@
-package com.farmacox.farmacode.ui.theme.components
+package com.farmacox.farmacode.ui.components
 
 
 import androidx.compose.foundation.background

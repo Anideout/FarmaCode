@@ -1,4 +1,4 @@
-package com.farmacox.farmacode.ui.theme.navigation
+package com.farmacox.farmacode.ui.navigation
 
 sealed class Screen(val route: String) {
     object Login : Screen("login")

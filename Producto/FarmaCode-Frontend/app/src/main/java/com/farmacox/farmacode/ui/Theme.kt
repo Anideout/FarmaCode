@@ -1,4 +1,4 @@
-package com.farmacox.farmacode.ui.theme.theme
+package com.farmacox.farmacode.ui
 
 import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme

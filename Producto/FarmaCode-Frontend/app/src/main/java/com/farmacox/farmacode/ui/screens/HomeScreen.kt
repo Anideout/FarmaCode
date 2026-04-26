@@ -1,4 +1,4 @@
-package com.farmacox.farmacode.ui.theme.screens
+package com.farmacox.farmacode.ui.screens
 
 
 import androidx.compose.foundation.background
@@ -48,8 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.farmacox.farmacode.FarmaCodeApp
-import com.farmacox.farmacode.ui.theme.components.MedicationCard
-import com.farmacox.farmacode.ui.theme.components.MedicationDetailDialog
+import com.farmacox.farmacode.ui.components.MedicationCard
+import com.farmacox.farmacode.ui.components.MedicationDetailDialog
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
 import com.farmacox.farmacode.viewmodel.HomeViewModel
 

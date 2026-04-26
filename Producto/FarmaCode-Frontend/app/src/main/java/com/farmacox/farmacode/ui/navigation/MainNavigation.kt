@@ -1,4 +1,4 @@
-package com.farmacox.farmacode.ui.theme.navigation
+package com.farmacox.farmacode.ui.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons

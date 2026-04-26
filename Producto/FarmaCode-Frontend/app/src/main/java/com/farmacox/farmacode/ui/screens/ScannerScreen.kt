@@ -1,8 +1,7 @@
-package com.farmacox.farmacode.ui.theme.screens
+package com.farmacox.farmacode.ui.screens
 
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +22,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,7 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.farmacox.farmacode.FarmaCodeApp
-import com.farmacox.farmacode.ui.theme.components.MedicationDetailDialog
+import com.farmacox.farmacode.ui.components.MedicationDetailDialog
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
 import com.farmacox.farmacode.viewmodel.ScannerViewModel
 
@@ -229,7 +229,7 @@ fun ScannerScreen() {
         }
 
         if (uiState.showResult && uiState.foundMedication != null) {
-            androidx.compose.material3.ModalBottomSheet(
+            ModalBottomSheet(
                 onDismissRequest = { viewModel.dismissResult() }
             ) {
                 MedicationDetailDialog(

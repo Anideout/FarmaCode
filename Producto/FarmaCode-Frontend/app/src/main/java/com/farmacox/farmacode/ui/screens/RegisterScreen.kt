@@ -1,4 +1,4 @@
-package com.farmacox.farmacode.ui.theme.screens
+package com.farmacox.farmacode.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -26,10 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.farmacox.farmacode.ui.theme.navigation.Screen
+import com.farmacox.farmacode.ui.navigation.Screen
 import com.farmacox.farmacode.viewmodel.RegisterViewModel
 
-private val Any.route: Any
 
 @Composable
 fun RegisterScreen(
