@@ -1,8 +1,12 @@
 package com.farmacox.farmacode.data.network
 
+import com.farmacox.farmacode.data.network.dto.BioequivalentesResponse
+import com.farmacox.farmacode.data.network.dto.FotoRequest
 import com.farmacox.farmacode.data.network.dto.MedicamentoResponse
 import com.farmacox.farmacode.data.network.dto.PageResponse
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -24,4 +28,7 @@ interface FarmaCodeApiService {
     suspend fun getMedicamentosByPrincipioActivo(
         @Path("nombre") nombre: String
     ): List<MedicamentoResponse>
+
+    @POST("api/busqueda/foto")
+    suspend fun buscarPorFoto(@Body request: FotoRequest): BioequivalentesResponse
 }

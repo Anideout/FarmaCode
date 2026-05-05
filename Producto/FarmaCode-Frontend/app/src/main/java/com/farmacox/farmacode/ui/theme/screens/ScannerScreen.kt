@@ -5,21 +5,23 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -33,12 +35,9 @@ import com.farmacox.farmacode.FarmaCodeApp
 import com.farmacox.farmacode.ui.theme.components.MedicationDetailDialog
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
 import com.farmacox.farmacode.viewmodel.ScannerViewModel
-import com.google.mlkit.vision.barcode.BarcodeScanning
-import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
-import java.util.concurrent.Executors
-import androidx.compose.ui.graphics.Color
-
+import com.google.mlkit.vision.text.TextRecognition
+import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,7 +46,6 @@ fun ScannerScreen(
     language: String
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     val app = context.applicationContext as FarmaCodeApp
     val viewModel: ScannerViewModel = viewModel(
         factory = ScannerViewModel.Factory(app.repository)
@@ -55,120 +53,187 @@ fun ScannerScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val isEnglish = language == "English"
-    
+
     var hasCameraPermission by remember { mutableStateOf(false) }
-    val launcher = rememberLauncherForActivityResult(
+    var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
+
+    val recognizer = remember { TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { granted -> hasCameraPermission = granted }
     )
 
     LaunchedEffect(Unit) {
-        launcher.launch(Manifest.permission.CAMERA)
+        permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            // Cabecera
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        if (hasCameraPermission) {
+
+            PhotoCameraPreview(
+                onImageCaptureReady = { capture -> imageCapture = capture }
+            )
+
+            // Encabezado flotante
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .align(Alignment.TopCenter)
+                    .statusBarsPadding()
+                    .padding(16.dp)
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = listOf(PrimaryGreen, PrimaryGreen.copy(alpha = 0.8f))
+                            colors = listOf(PrimaryGreen, PrimaryGreen.copy(alpha = 0.85f))
                         ),
                         shape = RoundedCornerShape(16.dp)
                     )
-                    .padding(24.dp),
+                    .padding(horizontal = 20.dp, vertical = 14.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.QrCodeScanner,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = if (isEnglish) "Medication Scanner" else "Escáner de Medicamentos",
-                        fontSize = (fontSize + 4).sp,
+                        text = if (isEnglish) "Identify Medication" else "Identificar Medicamento",
+                        fontSize = (fontSize + 3).sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
+                        color = Color.White
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = if (isEnglish)
+                            "Point at the packaging and press the button"
+                        else
+                            "Apunta al envase y presiona el botón",
+                        fontSize = (fontSize - 1).sp,
+                        color = Color.White.copy(alpha = 0.9f),
+                        textAlign = TextAlign.Center
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Overlay mientras se procesa
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.55f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = PrimaryGreen, strokeWidth = 4.dp)
+                        Spacer(Modifier.height(16.dp))
+                        Text(
+                            text = if (isEnglish) "Reading text..." else "Leyendo texto...",
+                            color = Color.White,
+                            fontSize = fontSize.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
 
-            // Vista de Cámara
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-            ) {
-                if (hasCameraPermission) {
-                    Box(modifier = Modifier.fillMaxSize()) {
-                        CameraPreview(
-                            onBarcodeScanned = { code ->
-                                viewModel.simulateScan(code)
+            // Mensaje de error
+            if (uiState.errorMessage != null && !uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 130.dp, start = 24.dp, end = 24.dp)
+                        .background(Color.Black.copy(alpha = 0.7f), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = uiState.errorMessage!!,
+                        color = Color(0xFFFF6B6B),
+                        fontSize = fontSize.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            // Botón de captura
+            if (!uiState.isLoading) {
+                FloatingActionButton(
+                    onClick = {
+                        val executor = ContextCompat.getMainExecutor(context)
+                        imageCapture?.takePicture(
+                            executor,
+                            object : ImageCapture.OnImageCapturedCallback() {
+                                override fun onCaptureSuccess(image: androidx.camera.core.ImageProxy) {
+                                    val bitmap = image.toBitmap()
+                                    val rotation = image.imageInfo.rotationDegrees
+                                    image.close()
+
+                                    val inputImage = InputImage.fromBitmap(bitmap, rotation)
+                                    recognizer.process(inputImage)
+                                        .addOnSuccessListener { result ->
+                                            val texto = result.text.trim()
+                                            if (texto.isBlank()) {
+                                                viewModel.setError(
+                                                    if (isEnglish)
+                                                        "No text detected in the image"
+                                                    else
+                                                        "No se detectó texto en la imagen"
+                                                )
+                                            } else {
+                                                viewModel.buscarPorTextoOcr(texto)
+                                            }
+                                        }
+                                        .addOnFailureListener { e ->
+                                            viewModel.setError(
+                                                if (isEnglish)
+                                                    "Error reading text: ${e.message}"
+                                                else
+                                                    "Error al leer texto: ${e.message}"
+                                            )
+                                            Log.e("ScannerScreen", "ML Kit error", e)
+                                        }
+                                }
+
+                                override fun onError(exception: ImageCaptureException) {
+                                    viewModel.setError(
+                                        if (isEnglish) "Error capturing photo"
+                                        else "Error al capturar la foto"
+                                    )
+                                }
                             }
                         )
-                        
-                        // Overlay de escaneo
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(40.dp)
-                                .background(
-                                    Color.Transparent
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                           // Dibujar un marco aquí si se desea
-                        }
-                    }
-                } else {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = if (isEnglish) "Camera permission required" else "Se requiere permiso de cámara",
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 40.dp)
+                        .size(80.dp),
+                    containerColor = PrimaryGreen,
+                    shape = CircleShape,
+                    elevation = FloatingActionButtonDefaults.elevation(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CameraAlt,
+                        contentDescription = if (isEnglish) "Capture" else "Capturar",
+                        tint = Color.White,
+                        modifier = Modifier.size(36.dp)
+                    )
                 }
             }
 
-            if (uiState.isLoading) {
-                Spacer(modifier = Modifier.height(16.dp))
-                CircularProgressIndicator(color = PrimaryGreen)
-            }
-
-            if (uiState.errorMessage != null) {
-                Spacer(modifier = Modifier.height(16.dp))
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(
-                    text = uiState.errorMessage!!,
-                    color = MaterialTheme.colorScheme.error,
-                    fontSize = fontSize.sp,
-                    textAlign = TextAlign.Center
+                    text = if (isEnglish) "Camera permission required" else "Se requiere permiso de cámara",
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(32.dp)
                 )
             }
         }
 
+        // Bottom sheet con resultados
         if (uiState.showResult && uiState.foundMedication != null) {
             ModalBottomSheet(
                 onDismissRequest = { viewModel.dismissResult() }
@@ -187,59 +252,40 @@ fun ScannerScreen(
 }
 
 @Composable
-fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
+fun PhotoCameraPreview(
+    onImageCaptureReady: (ImageCapture) -> Unit
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
-    
-    // Executor para el análisis de imágenes
-    val analysisExecutor = remember { Executors.newSingleThreadExecutor() }
-    val scanner = remember { BarcodeScanning.getClient() }
+    val imageCaptureUseCase = remember {
+        ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .build()
+    }
+
+    LaunchedEffect(imageCaptureUseCase) {
+        onImageCaptureReady(imageCaptureUseCase)
+    }
 
     AndroidView(
         factory = { ctx ->
             val previewView = PreviewView(ctx)
             cameraProviderFuture.addListener({
                 val cameraProvider = cameraProviderFuture.get()
-                
                 val preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
-
-                val imageAnalysis = ImageAnalysis.Builder()
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build()
-
-                imageAnalysis.setAnalyzer(analysisExecutor) { imageProxy ->
-                    val mediaImage = imageProxy.image
-                    if (mediaImage != null) {
-                        val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-                        scanner.process(image)
-                            .addOnSuccessListener { barcodes ->
-                                for (barcode in barcodes) {
-                                    barcode.rawValue?.let { code ->
-                                        onBarcodeScanned(code)
-                                    }
-                                }
-                            }
-                            .addOnCompleteListener {
-                                imageProxy.close()
-                            }
-                    } else {
-                        imageProxy.close()
-                    }
-                }
-
                 try {
                     cameraProvider.unbindAll()
                     cameraProvider.bindToLifecycle(
                         lifecycleOwner,
                         CameraSelector.DEFAULT_BACK_CAMERA,
                         preview,
-                        imageAnalysis
+                        imageCaptureUseCase
                     )
                 } catch (e: Exception) {
-                    Log.e("CameraPreview", "Binding failed", e)
+                    Log.e("PhotoCameraPreview", "Binding failed", e)
                 }
             }, ContextCompat.getMainExecutor(ctx))
             previewView
@@ -247,4 +293,3 @@ fun CameraPreview(onBarcodeScanned: (String) -> Unit) {
         modifier = Modifier.fillMaxSize()
     )
 }
-

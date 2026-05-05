@@ -1,5 +1,6 @@
 package com.farmacode.backend.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -17,6 +18,7 @@ import java.util.stream.Collectors;
  * Manejador global de excepciones para toda la API REST de FarmaCode.
  * Centraliza el manejo de errores y garantiza respuestas consistentes en formato JSON.
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -56,19 +58,21 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ClaudeApiException.class)
     public ResponseEntity<Map<String, Object>> handleClaudeApiError(ClaudeApiException ex) {
-        return buildResponse(HttpStatus.BAD_GATEWAY, "Error al comunicarse con la API de IA: " + ex.getMessage(), null);
+        log.error("Error en Claude API: {}", ex.getMessage(), ex);
+        return buildResponse(HttpStatus.BAD_GATEWAY, "Error al comunicarse con Claude API: " + ex.getMessage(), null);
     }
 
-    /**
-     * Maneja cualquier excepción no controlada y responde con HTTP 500.
-     *
-     * @param ex excepción inesperada
-     * @return respuesta JSON con código 500 y mensaje genérico
-     */
+    @ExceptionHandler(GeminiApiException.class)
+    public ResponseEntity<Map<String, Object>> handleGeminiApiError(GeminiApiException ex) {
+        log.error("Error en Gemini API: {}", ex.getMessage(), ex);
+        return buildResponse(HttpStatus.BAD_GATEWAY, "Error al comunicarse con Gemini API: " + ex.getMessage(), null);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericError(Exception ex) {
+        log.error("Error interno no controlado: {}", ex.getMessage(), ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Ha ocurrido un error interno en el servidor", null);
+                "Error interno: " + ex.getMessage(), null);
     }
 
     /**

@@ -2,6 +2,8 @@ package com.farmacox.farmacode.repository
 
 import com.farmacox.farmacode.data.dao.entity.Medication
 import com.farmacox.farmacode.data.network.FarmaCodeApiService
+import com.farmacox.farmacode.data.network.dto.BioequivalentesResponse
+import com.farmacox.farmacode.data.network.dto.FotoRequest
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -55,6 +57,10 @@ class MedicationRepository(private val apiService: FarmaCodeApiService) {
             .distinct()
             .sorted()
         emit(categories)
+    }
+
+    suspend fun buscarPorFoto(imagenBase64: String): BioequivalentesResponse {
+        return apiService.buscarPorFoto(FotoRequest(imagenBase64))
     }
 
     suspend fun insertMedication(medication: Medication) {

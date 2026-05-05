@@ -9,5 +9,6 @@ package com.farmacode.backend.entity;
  */
 public enum TipoBusqueda {
     MANUAL,
-    OCR
+    OCR,
+    FOTO
 }

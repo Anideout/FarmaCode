@@ -8,27 +8,23 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    // Emulador Android: 10.0.2.2 apunta al localhost del PC.
-    // En dispositivo físico: reemplazar por la IP local del PC (ej: http://192.168.1.X:8080/)
-    private const val BASE_URL = "http://10.0.2.2:8080/"
-
-    private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
+    private const val BASE_URL = "http://10.172.39.30:8080/"
 
     private val httpClient = OkHttpClient.Builder()
-        .addInterceptor(loggingInterceptor)
+        .addInterceptor(HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        })
         .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)  // Gemini puede tardar con imágenes
+        .readTimeout(60, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    val apiService: FarmaCodeApiService by lazy {
+    val busquedaService: BusquedaApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(httpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(FarmaCodeApiService::class.java)
+            .create(BusquedaApiService::class.java)
     }
 }

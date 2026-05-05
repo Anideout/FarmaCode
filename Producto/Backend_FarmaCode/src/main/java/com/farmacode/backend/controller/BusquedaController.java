@@ -1,6 +1,7 @@
 package com.farmacode.backend.controller;
 
 import com.farmacode.backend.dto.request.BusquedaRequestDTO;
+import com.farmacode.backend.dto.request.FotoRequestDTO;
 import com.farmacode.backend.dto.request.OcrRequestDTO;
 import com.farmacode.backend.dto.response.BioequivalentesResponseDTO;
 import com.farmacode.backend.service.BusquedaService;
@@ -73,6 +74,24 @@ public class BusquedaController {
             @Valid @RequestBody OcrRequestDTO request) {
         BioequivalentesResponseDTO respuesta =
                 busquedaService.buscarPorOcr(request.textoOcr());
+        return ResponseEntity.ok(respuesta);
+    }
+
+    @Operation(
+            summary = "Buscar bioequivalentes desde fotografía",
+            description = "Recibe una imagen en Base64 (JPEG), usa Gemini Vision para identificar " +
+                          "el medicamento y retorna todos los bioequivalentes con precios."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Búsqueda exitosa"),
+            @ApiResponse(responseCode = "400", description = "Imagen vacía o inválida"),
+            @ApiResponse(responseCode = "502", description = "Error al comunicarse con Gemini API")
+    })
+    @PostMapping("/foto")
+    public ResponseEntity<BioequivalentesResponseDTO> buscarPorFoto(
+            @Valid @RequestBody FotoRequestDTO request) {
+        BioequivalentesResponseDTO respuesta =
+                busquedaService.buscarPorFoto(request.imagenBase64());
         return ResponseEntity.ok(respuesta);
     }
 }

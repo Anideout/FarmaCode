@@ -662,6 +662,39 @@ VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Metformina Saval' 
 INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
 VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Aspirina Protect' LIMIT 1), 3990.00, 'Farmacias Ahumada', TRUE);
 
+-- -------------------------------------------------------------
+-- Principio activo: Carbocisteína
+-- -------------------------------------------------------------
+INSERT IGNORE INTO principio_activo (nombre, descripcion, categoria) VALUES
+('Carbocisteína',
+ 'Mucolítico que actúa reduciendo la viscosidad de las secreciones bronquiales al modificar la estructura de las mucoproteínas. Facilita la expectoración y el drenaje de las vías respiratorias. Indicado en bronquitis aguda y crónica, asma bronquial con hipersecreción y otras afecciones respiratorias con mucosidad espesa.',
+ 'Mucolítico');
+
+-- -------------------------------------------------------------
+-- Laboratorio: Pasteur
+-- -------------------------------------------------------------
+INSERT IGNORE INTO laboratorio (nombre, pais) VALUES
+('Pasteur', 'Chile');
+
+-- -------------------------------------------------------------
+-- Medicamento: Broncotusilan Adulto (Carbocisteína)
+-- -------------------------------------------------------------
+INSERT IGNORE INTO medicamento (nombre_comercial, dosis, presentacion, administracion, tipo, cert_isp, descripcion, principio_activo_id, laboratorio_id)
+VALUES
+('Broncotusilan Adulto',
+ '250mg/5ml',
+ 'Solución oral 120ml',
+ 'Oral',
+ 'BIOEQUIVALENTE',
+ TRUE,
+ 'Mucolítico de uso adulto. Facilita la eliminación de secreciones bronquiales espesas en afecciones respiratorias. Certificado bioequivalente por el ISP Chile. Dosis habitual: 15ml (750mg) tres veces al día en adultos.',
+ (SELECT id FROM principio_activo WHERE nombre = 'Carbocisteína'),
+ (SELECT id FROM laboratorio WHERE nombre = 'Pasteur'));
+
+-- --- Precio Broncotusilan Adulto ---
+INSERT IGNORE INTO precio (medicamento_id, valor, fuente, vigente)
+VALUES ((SELECT id FROM medicamento WHERE nombre_comercial = 'Broncotusilan Adulto' LIMIT 1), 5490.00, 'Cruz Verde', TRUE);
+
 -- =============================================================
 -- Usuario de prueba (ID=1 - usado por HistorialController)
 -- password_hash corresponde a 'password123' en BCrypt (solo para pruebas)

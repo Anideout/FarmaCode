@@ -113,6 +113,42 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
         simulateScan(query)
     }
 
+    fun buscarPorFoto(imagenBase64: String) {
+        if (_uiState.value.isLoading || imagenBase64.isBlank()) return
+
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
+        viewModelScope.launch {
+            try {
+                val response = repository.buscarPorFoto(imagenBase64)
+                if (response.medicamentos.isNotEmpty()) {
+                    val medications = response.medicamentos.map { it.toMedication() }
+                    _uiState.value = _uiState.value.copy(
+                        foundMedication = medications.first(),
+                        alternatives = medications.drop(1),
+                        isLoading = false,
+                        showResult = true,
+                        errorMessage = null
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "No se identificó ningún medicamento en la foto."
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Error al procesar la foto: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun setError(message: String) {
+        _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = message)
+    }
+
     fun dismissResult() {
         _uiState.value = _uiState.value.copy(showResult = false, foundMedication = null)
     }
