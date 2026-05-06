@@ -93,6 +93,21 @@ public class BusquedaService {
             info = geminiApiService.extraerInformacionDeOcr(textoOcr);
         }
 
+        // Fallback: si Gemini no identificó principio activo, pedirlo explícitamente por nombre
+        if (info.principioActivo().equals("N/D") || info.principioActivo().equalsIgnoreCase("DESCONOCIDO")) {
+            String nombreParaBuscar = !info.nombreComercial().equals("N/D")
+                    ? info.nombreComercial()
+                    : extraerNombreDeTextoOcr(textoOcr);
+            if (!nombreParaBuscar.isBlank()) {
+                String paIdentificado = geminiApiService.identificarPrincipioActivo(nombreParaBuscar);
+                if (!paIdentificado.isBlank() && !paIdentificado.equalsIgnoreCase("DESCONOCIDO")) {
+                    info = new GeminiApiService.InfoMedicamento(
+                            info.nombreComercial(), paIdentificado, info.dosis(),
+                            info.presentacion(), info.laboratorio(), info.viaAdministracion());
+                }
+            }
+        }
+
         // Paso 3: si Gemini identificó un principio activo que sí existe en BD → bioequivalentes
         if (!info.principioActivo().equals("N/D") && !info.principioActivo().equalsIgnoreCase("DESCONOCIDO")) {
             Optional<PrincipioActivo> paEnBD = principioActivoRepository.findByNombreIgnoreCase(info.principioActivo());

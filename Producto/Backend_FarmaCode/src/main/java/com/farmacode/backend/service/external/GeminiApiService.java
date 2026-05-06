@@ -153,8 +153,10 @@ public class GeminiApiService {
                 "Texto OCR:\n" + textoOcr + "\n\n" +
                 "Responde ÚNICAMENTE con un JSON válido con esta estructura exacta (sin markdown, sin comentarios):\n" +
                 "{\"nombreComercial\":\"...\",\"principioActivo\":\"...\",\"dosis\":\"...\",\"presentacion\":\"...\",\"laboratorio\":\"...\",\"viaAdministracion\":\"...\"}\n" +
-                "Para 'viaAdministracion' usa solo uno de estos valores: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
-                "Si no puedes determinar un campo, usa exactamente \"N/D\".";
+                "IMPORTANTE: Para 'principioActivo', si no aparece explícitamente en el texto, dedúcelo usando tu conocimiento farmacológico. " +
+                "Muchos medicamentos tienen el mismo nombre comercial y principio activo (ej: 'Prednisona' → principioActivo: 'Prednisona'). " +
+                "Para 'viaAdministracion' usa solo: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
+                "Usa \"N/D\" solo si realmente es imposible determinarlo.";
         try {
             String respuesta = llamarGeminiTexto(prompt);
             InfoMedicamento info = parsearInfoMedicamento(respuesta);
