@@ -166,20 +166,28 @@ fun ScannerScreen(
                                     val rotation = image.imageInfo.rotationDegrees
                                     image.close()
 
+                                    // Comprimir imagen para enviar como fallback Vision
+                                    val maxDim = 1024
+                                    val scale = minOf(1f, maxDim.toFloat() / maxOf(bitmap.width, bitmap.height))
+                                    val bitmapScaled = if (scale < 1f)
+                                        android.graphics.Bitmap.createScaledBitmap(
+                                            bitmap,
+                                            (bitmap.width * scale).toInt(),
+                                            (bitmap.height * scale).toInt(),
+                                            true
+                                        ) else bitmap
+                                    val baos = java.io.ByteArrayOutputStream()
+                                    bitmapScaled.compress(android.graphics.Bitmap.CompressFormat.JPEG, 75, baos)
+                                    val imagenBase64 = android.util.Base64.encodeToString(
+                                        baos.toByteArray(), android.util.Base64.NO_WRAP
+                                    )
+
                                     val inputImage = InputImage.fromBitmap(bitmap, rotation)
                                     recognizer.process(inputImage)
                                         .addOnSuccessListener { result ->
                                             val texto = result.text.trim()
-                                            if (texto.isBlank()) {
-                                                viewModel.setError(
-                                                    if (isEnglish)
-                                                        "No text detected in the image"
-                                                    else
-                                                        "No se detectó texto en la imagen"
-                                                )
-                                            } else {
-                                                viewModel.buscarPorTextoOcr(texto)
-                                            }
+                                            // Siempre enviamos imagen; el backend decide si usar texto o Vision
+                                            viewModel.buscarPorTextoOcr(texto, imagenBase64)
                                         }
                                         .addOnFailureListener { e ->
                                             viewModel.setError(

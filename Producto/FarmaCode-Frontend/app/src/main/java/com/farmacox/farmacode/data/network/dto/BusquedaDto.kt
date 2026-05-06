@@ -1,7 +1,10 @@
 package com.farmacox.farmacode.data.network.dto
 
 data class FotoRequest(val imagenBase64: String)
-data class OcrRequest(val textoOcr: String)
+data class OcrRequest(
+    val textoOcr: String,
+    val imagenBase64: String? = null
+)
 
 data class BioequivalentesResponse(
     val principioActivo: String,

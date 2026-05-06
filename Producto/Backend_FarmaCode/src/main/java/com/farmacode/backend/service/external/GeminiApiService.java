@@ -1,5 +1,7 @@
 package com.farmacode.backend.service.external;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.farmacode.backend.exception.GeminiApiException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,13 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 
-/**
- * Servicio que llama a la Gemini Vision API de Google para identificar
- * el nombre comercial de un medicamento a partir de una imagen en Base64.
- *
- * Modelo usado: gemini-1.5-flash (gratuito con cuota generosa)
- * Endpoint: POST https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=API_KEY
- */
 @Slf4j
 @Service
 public class GeminiApiService {
@@ -32,6 +27,7 @@ public class GeminiApiService {
     private String apiUrl;
 
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public GeminiApiService() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
@@ -41,12 +37,23 @@ public class GeminiApiService {
     }
 
     /**
-     * Envía una imagen en Base64 a Gemini Vision y retorna el nombre comercial
-     * del medicamento identificado, o "DESCONOCIDO" si no se puede identificar.
-     *
-     * @param imagenBase64 imagen del medicamento codificada en Base64 (JPEG)
-     * @return nombre comercial del medicamento identificado
-     * @throws GeminiApiException si ocurre un error de comunicación con la API
+     * Información estructurada extraída de un texto OCR por Gemini.
+     */
+    public record InfoMedicamento(
+            String nombreComercial,
+            String principioActivo,
+            String dosis,
+            String presentacion,
+            String laboratorio,
+            String viaAdministracion
+    ) {
+        public static InfoMedicamento vacia() {
+            return new InfoMedicamento("N/D", "N/D", "N/D", "N/D", "N/D", "N/D");
+        }
+    }
+
+    /**
+     * Identifica el nombre comercial de un medicamento a partir de una imagen Base64.
      */
     public String identificarMedicamento(String imagenBase64) {
         if (apiKey == null || apiKey.isBlank()) {
@@ -58,7 +65,6 @@ public class GeminiApiService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            // Parte de la imagen
             Map<String, Object> inlineData = new HashMap<>();
             inlineData.put("mimeType", "image/jpeg");
             inlineData.put("data", imagenBase64);
@@ -66,7 +72,6 @@ public class GeminiApiService {
             Map<String, Object> imagePart = new HashMap<>();
             imagePart.put("inlineData", inlineData);
 
-            // Parte del texto (prompt)
             Map<String, Object> textPart = new HashMap<>();
             textPart.put("text",
                     "Identifica el nombre comercial del medicamento que aparece en esta imagen. " +
@@ -81,16 +86,14 @@ public class GeminiApiService {
             Map<String, Object> payload = new HashMap<>();
             payload.put("contents", List.of(content));
 
-            // La API key va como query param
             String url = apiUrl + "?key=" + apiKey;
-
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
             @SuppressWarnings("rawtypes")
             ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
 
             String resultado = extraerTextoRespuesta(response.getBody());
-            log.info("Gemini identificó medicamento: '{}'", resultado);
+            log.info("Gemini identificó medicamento en imagen: '{}'", resultado);
             return resultado;
 
         } catch (HttpStatusCodeException ex) {
@@ -104,6 +107,155 @@ public class GeminiApiService {
             log.error("Excepción inesperada llamando a Gemini API: {}", ex.getMessage(), ex);
             throw new GeminiApiException("Error inesperado al llamar a Gemini API: " + ex.getMessage(), ex);
         }
+    }
+
+    /**
+     * Identifica el principio activo de un medicamento a partir de su nombre comercial.
+     * Reemplaza ClaudeApiService para el flujo de búsqueda manual.
+     */
+    public String identificarPrincipioActivo(String nombreComercial) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("GEMINI_API_KEY no configurada, retornando vacío");
+            return "";
+        }
+        String prompt = String.format(
+                "Dado el medicamento comercial '%s', responde ÚNICAMENTE con el nombre del principio activo " +
+                "en español, sin explicaciones, sin puntuación al final. " +
+                "Ejemplo: si el medicamento es 'Aspirina', responde 'Ácido acetilsalicílico'. " +
+                "Si no reconoces el medicamento, responde 'DESCONOCIDO'.",
+                nombreComercial);
+        try {
+            String resultado = llamarGeminiTexto(prompt);
+            log.info("Gemini identificó principio activo de '{}': '{}'", nombreComercial, resultado);
+            return resultado;
+        } catch (Exception ex) {
+            log.error("Error al identificar principio activo con Gemini para '{}': {}", nombreComercial, ex.getMessage());
+            return "";
+        }
+    }
+
+    /**
+     * Extrae información estructurada del medicamento a partir de texto OCR crudo.
+     * Reemplaza la extracción por regex en el flujo OCR.
+     */
+    public InfoMedicamento extraerInformacionDeOcr(String textoOcr) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("GEMINI_API_KEY no configurada, retornando info vacía");
+            return InfoMedicamento.vacia();
+        }
+        String prompt = "Analiza el siguiente texto extraído por OCR de un envase de medicamento.\n" +
+                "Texto OCR:\n" + textoOcr + "\n\n" +
+                "Responde ÚNICAMENTE con un JSON válido con esta estructura exacta (sin markdown, sin comentarios):\n" +
+                "{\"nombreComercial\":\"...\",\"principioActivo\":\"...\",\"dosis\":\"...\",\"presentacion\":\"...\",\"laboratorio\":\"...\",\"viaAdministracion\":\"...\"}\n" +
+                "Para 'viaAdministracion' usa solo uno de estos valores: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
+                "Si no puedes determinar un campo, usa exactamente \"N/D\".";
+        try {
+            String respuesta = llamarGeminiTexto(prompt);
+            InfoMedicamento info = parsearInfoMedicamento(respuesta);
+            log.info("Gemini extrajo de OCR — nombre: '{}', principioActivo: '{}', dosis: '{}'",
+                    info.nombreComercial(), info.principioActivo(), info.dosis());
+            return info;
+        } catch (Exception ex) {
+            log.error("Error al extraer información OCR con Gemini: {}", ex.getMessage());
+            return InfoMedicamento.vacia();
+        }
+    }
+
+    /**
+     * Extrae información estructurada del medicamento directamente desde una imagen Base64.
+     * Usado como fallback cuando el texto OCR es insuficiente.
+     */
+    public InfoMedicamento extraerInformacionDeImagen(String imagenBase64) {
+        if (apiKey == null || apiKey.isBlank()) {
+            log.warn("GEMINI_API_KEY no configurada, retornando info vacía");
+            return InfoMedicamento.vacia();
+        }
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, Object> inlineData = new HashMap<>();
+            inlineData.put("mimeType", "image/jpeg");
+            inlineData.put("data", imagenBase64);
+
+            Map<String, Object> imagePart = new HashMap<>();
+            imagePart.put("inlineData", inlineData);
+
+            Map<String, Object> textPart = new HashMap<>();
+            textPart.put("text",
+                    "Analiza esta imagen de un envase de medicamento y extrae la información estructurada.\n" +
+                    "Responde ÚNICAMENTE con un JSON válido con esta estructura exacta (sin markdown, sin comentarios):\n" +
+                    "{\"nombreComercial\":\"...\",\"principioActivo\":\"...\",\"dosis\":\"...\",\"presentacion\":\"...\",\"laboratorio\":\"...\",\"viaAdministracion\":\"...\"}\n" +
+                    "Para 'viaAdministracion' usa solo: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
+                    "Si no puedes determinar un campo, usa exactamente \"N/D\".");
+
+            Map<String, Object> content = new HashMap<>();
+            content.put("parts", List.of(imagePart, textPart));
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("contents", List.of(content));
+
+            String url = apiUrl + "?key=" + apiKey;
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
+            @SuppressWarnings("rawtypes")
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
+            String respuesta = extraerTextoRespuesta(response.getBody());
+            InfoMedicamento info = parsearInfoMedicamento(respuesta);
+            log.info("Gemini Vision extrajo — nombre: '{}', principioActivo: '{}', dosis: '{}'",
+                    info.nombreComercial(), info.principioActivo(), info.dosis());
+            return info;
+        } catch (Exception ex) {
+            log.error("Error al extraer información de imagen con Gemini Vision: {}", ex.getMessage());
+            return InfoMedicamento.vacia();
+        }
+    }
+
+    // ─── Métodos privados ──────────────────────────────────────────────────────
+
+    private String llamarGeminiTexto(String prompt) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, Object> textPart = new HashMap<>();
+        textPart.put("text", prompt);
+
+        Map<String, Object> content = new HashMap<>();
+        content.put("parts", List.of(textPart));
+
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("contents", List.of(content));
+
+        String url = apiUrl + "?key=" + apiKey;
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
+        @SuppressWarnings("rawtypes")
+        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
+        return extraerTextoRespuesta(response.getBody());
+    }
+
+    private InfoMedicamento parsearInfoMedicamento(String json) {
+        try {
+            // Limpiar posibles bloques markdown que Gemini pueda añadir
+            String limpio = json.replaceAll("(?s)```json\\s*", "").replaceAll("(?s)```\\s*", "").trim();
+            Map<String, String> map = objectMapper.readValue(limpio, new TypeReference<>() {});
+            return new InfoMedicamento(
+                    getOrND(map, "nombreComercial"),
+                    getOrND(map, "principioActivo"),
+                    getOrND(map, "dosis"),
+                    getOrND(map, "presentacion"),
+                    getOrND(map, "laboratorio"),
+                    getOrND(map, "viaAdministracion")
+            );
+        } catch (Exception ex) {
+            log.error("Error parseando respuesta JSON de Gemini: '{}' — {}", json, ex.getMessage());
+            return InfoMedicamento.vacia();
+        }
+    }
+
+    private String getOrND(Map<String, String> map, String key) {
+        String value = map.get(key);
+        return (value == null || value.isBlank()) ? "N/D" : value;
     }
 
     @SuppressWarnings("unchecked")

@@ -117,14 +117,15 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
         simulateScan(query)
     }
 
-    fun buscarPorTextoOcr(texto: String) {
-        if (_uiState.value.isLoading || texto.isBlank()) return
+    fun buscarPorTextoOcr(texto: String, imagenBase64: String? = null) {
+        val textoVacio = texto.isBlank()
+        if (_uiState.value.isLoading || (textoVacio && imagenBase64 == null)) return
 
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.busquedaService.buscarPorOcr(OcrRequest(texto))
+                val response = RetrofitClient.busquedaService.buscarPorOcr(OcrRequest(texto, imagenBase64))
                 if (response.medicamentos.isNotEmpty()) {
                     val medications = response.medicamentos.map { dto ->
                         Medication(

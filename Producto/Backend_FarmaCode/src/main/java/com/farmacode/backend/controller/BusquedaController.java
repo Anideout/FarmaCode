@@ -71,9 +71,9 @@ public class BusquedaController {
     })
     @PostMapping("/ocr")
     public ResponseEntity<BioequivalentesResponseDTO> buscarPorOcr(
-            @Valid @RequestBody OcrRequestDTO request) {
+            @RequestBody OcrRequestDTO request) {
         BioequivalentesResponseDTO respuesta =
-                busquedaService.buscarPorOcr(request.textoOcr());
+                busquedaService.buscarPorOcr(request.textoOcr(), request.imagenBase64());
         return ResponseEntity.ok(respuesta);
     }
 
