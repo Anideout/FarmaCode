@@ -83,8 +83,14 @@ public class GeminiApiService {
             Map<String, Object> content = new HashMap<>();
             content.put("parts", List.of(imagePart, textPart));
 
+            Map<String, Object> thinkingConfig = new HashMap<>();
+            thinkingConfig.put("thinkingBudget", 0);
+            Map<String, Object> generationConfig = new HashMap<>();
+            generationConfig.put("thinkingConfig", thinkingConfig);
+
             Map<String, Object> payload = new HashMap<>();
             payload.put("contents", List.of(content));
+            payload.put("generationConfig", generationConfig);
 
             String url = apiUrl + "?key=" + apiKey;
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
@@ -192,8 +198,14 @@ public class GeminiApiService {
             Map<String, Object> content = new HashMap<>();
             content.put("parts", List.of(imagePart, textPart));
 
+            Map<String, Object> thinkingConfig = new HashMap<>();
+            thinkingConfig.put("thinkingBudget", 0);
+            Map<String, Object> generationConfig = new HashMap<>();
+            generationConfig.put("thinkingConfig", thinkingConfig);
+
             Map<String, Object> payload = new HashMap<>();
             payload.put("contents", List.of(content));
+            payload.put("generationConfig", generationConfig);
 
             String url = apiUrl + "?key=" + apiKey;
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
@@ -223,8 +235,14 @@ public class GeminiApiService {
         Map<String, Object> content = new HashMap<>();
         content.put("parts", List.of(textPart));
 
+        Map<String, Object> thinkingConfig = new HashMap<>();
+        thinkingConfig.put("thinkingBudget", 0);
+        Map<String, Object> generationConfig = new HashMap<>();
+        generationConfig.put("thinkingConfig", thinkingConfig);
+
         Map<String, Object> payload = new HashMap<>();
         payload.put("contents", List.of(content));
+        payload.put("generationConfig", generationConfig);
 
         String url = apiUrl + "?key=" + apiKey;
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
