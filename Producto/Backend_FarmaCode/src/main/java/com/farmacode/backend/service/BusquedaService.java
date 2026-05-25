@@ -317,6 +317,18 @@ public class BusquedaService {
             nombreFinal = nombreFinal.substring(laboratorio.length()).trim();
         }
 
+        // Safety net: si Gemini asignó como laboratorio solo el sufijo de un fabricante
+        // (ej: nombreComercial="Ascend", laboratorio="Laboratories"),
+        // reconstruir el nombre real del lab y usar el principio activo como nombre del medicamento
+        if (!info.principioActivo().equals("N/D") && !laboratorio.equals("No detectado")) {
+            List<String> sufijosLab = List.of("laboratories", "labs", "pharma", "pharmaceuticals",
+                    "healthcare", "medical", "biotech", "biosciences", "generics");
+            if (sufijosLab.contains(laboratorio.toLowerCase())) {
+                laboratorio = nombreFinal + " " + laboratorio;
+                nombreFinal = info.principioActivo();
+            }
+        }
+
         // Normalizar capitalización para los campos que Gemini suele devolver en MAYÚSCULAS
         String nombreNorm      = normalizarCapitalizacion(nombreFinal);
         String laboratorioNorm = normalizarCapitalizacion(laboratorio);

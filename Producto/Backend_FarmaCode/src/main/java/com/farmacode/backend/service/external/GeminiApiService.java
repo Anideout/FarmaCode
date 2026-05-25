@@ -160,11 +160,12 @@ public class GeminiApiService {
                 "REGLAS IMPORTANTES:\n" +
                 "- PRIMERO: Si el texto NO corresponde a un envase de medicamento (ej: alimento, bebida, producto de limpieza, texto aleatorio, otro producto), " +
                 "responde ÚNICAMENTE con: {\"nombreComercial\":\"NO_ES_MEDICAMENTO\",\"principioActivo\":\"NO_ES_MEDICAMENTO\",\"dosis\":\"N/D\",\"presentacion\":\"N/D\",\"laboratorio\":\"N/D\",\"paisOrigen\":\"N/D\",\"viaAdministracion\":\"N/D\",\"descripcionGeneral\":\"N/D\"}\n" +
-                "- 'nombreComercial': SOLO el nombre del medicamento, NUNCA incluyas el nombre del laboratorio/fabricante. " +
-                "Si el medicamento es genérico sin marca propia, usa el nombre del principio activo como nombreComercial. " +
-                "Ejemplo CORRECTO: 'Levocetirizina Diclorhidrato'. Ejemplo INCORRECTO: 'HETERO Levocetirizina Diclorhidrato'.\n" +
+                "- 'nombreComercial': SOLO el nombre del medicamento, NUNCA el nombre del laboratorio/fabricante ni parte de él. " +
+                "Para medicamentos GENÉRICOS (sin marca registrada propia), el nombreComercial DEBE ser el principio activo, no la marca del fabricante. " +
+                "Ejemplo CORRECTO: si ves 'ASCEND LABORATORIES AZITROMICINA 500MG' → nombreComercial='Azitromicina', laboratorio='Ascend Laboratories'. " +
+                "Ejemplo CORRECTO: 'Levocetirizina Diclorhidrato'. Ejemplo INCORRECTO: 'HETERO Levocetirizina Diclorhidrato' o 'Ascend'.\n" +
                 "- 'principioActivo': si no aparece explícitamente, dedúcelo con tu conocimiento farmacológico.\n" +
-                "- 'laboratorio': solo el nombre del fabricante (ej: 'HETERO', 'Pfizer').\n" +
+                "- 'laboratorio': nombre COMPLETO del fabricante (ej: 'Ascend Laboratories', 'HETERO', 'Pfizer'). Nunca solo la segunda palabra.\n" +
                 "- 'paisOrigen': país de fabricación o del laboratorio según tu conocimiento (ej: 'India', 'Chile'). " +
                 "Si el laboratorio es conocido, dedúcelo aunque no aparezca en el texto.\n" +
                 "- 'viaAdministracion': usa solo: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
@@ -212,10 +213,11 @@ public class GeminiApiService {
                     "REGLAS IMPORTANTES:\n" +
                     "- PRIMERO: Si la imagen NO muestra un medicamento (ej: alimento, bebida, producto de limpieza, persona, objeto genérico, etc.), " +
                     "responde ÚNICAMENTE con: {\"nombreComercial\":\"NO_ES_MEDICAMENTO\",\"principioActivo\":\"NO_ES_MEDICAMENTO\",\"dosis\":\"N/D\",\"presentacion\":\"N/D\",\"laboratorio\":\"N/D\",\"paisOrigen\":\"N/D\",\"viaAdministracion\":\"N/D\",\"descripcionGeneral\":\"N/D\"}\n" +
-                    "- 'nombreComercial': SOLO el nombre del medicamento, NUNCA incluyas el nombre del laboratorio/fabricante. " +
-                    "Si el medicamento es genérico sin marca propia, usa el nombre del principio activo como nombreComercial. " +
-                    "Ejemplo CORRECTO: 'Levocetirizina Diclorhidrato'. Ejemplo INCORRECTO: 'HETERO Levocetirizina Diclorhidrato'.\n" +
-                    "- 'laboratorio': solo el nombre del fabricante (ej: 'HETERO', 'Pfizer').\n" +
+                    "- 'nombreComercial': SOLO el nombre del medicamento, NUNCA el nombre del laboratorio/fabricante ni parte de él. " +
+                    "Para medicamentos GENÉRICOS (sin marca registrada propia), el nombreComercial DEBE ser el principio activo, no la marca del fabricante. " +
+                    "Ejemplo CORRECTO: si ves 'ASCEND LABORATORIES AZITROMICINA 500MG' → nombreComercial='Azitromicina', laboratorio='Ascend Laboratories'. " +
+                    "Ejemplo CORRECTO: 'Levocetirizina Diclorhidrato'. Ejemplo INCORRECTO: 'HETERO Levocetirizina Diclorhidrato' o 'Ascend'.\n" +
+                    "- 'laboratorio': nombre COMPLETO del fabricante (ej: 'Ascend Laboratories', 'HETERO', 'Pfizer'). Nunca solo la segunda palabra.\n" +
                     "- 'paisOrigen': país de fabricación o del laboratorio según tu conocimiento (ej: 'India', 'Chile'). " +
                     "Si el laboratorio es conocido, dedúcelo aunque no aparezca en la imagen.\n" +
                     "- 'viaAdministracion': usa solo: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
