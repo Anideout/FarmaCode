@@ -3,6 +3,7 @@ package com.farmacox.farmacode.ui.theme.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,13 +19,17 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -47,14 +52,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.farmacox.farmacode.FarmaCodeApp
 import com.farmacox.farmacode.R
+import com.farmacox.farmacode.data.dao.entity.ScanHistory
 import com.farmacox.farmacode.ui.theme.components.MedicationCard
 import com.farmacox.farmacode.ui.theme.components.MedicationDetailDialog
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
@@ -128,9 +136,9 @@ fun HomeScreen(
                                         modifier = Modifier.size(32.dp)
                                     )
                                 }
-                                
+
                                 Spacer(modifier = Modifier.width(12.dp))
-                                
+
                                 Column {
                                     Text(
                                         text = "FarmaCode",
@@ -176,6 +184,34 @@ fun HomeScreen(
                             ),
                             singleLine = true
                         )
+                    }
+                }
+            }
+
+            // Historial de escaneos
+            if (uiState.scanHistory.isNotEmpty()) {
+                item {
+                    Column(modifier = Modifier.padding(top = 16.dp)) {
+                        Text(
+                            text = if (isEnglish) "Recently Scanned" else "Últimos escaneados",
+                            fontSize = (fontSize + 1).sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        LazyRow(
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            items(uiState.scanHistory) { scan ->
+                                ScanHistoryCard(
+                                    scan = scan,
+                                    fontSize = fontSize,
+                                    onClick = { viewModel.onScanHistorySelected(scan) }
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -257,6 +293,90 @@ fun HomeScreen(
                     },
                     fontSize = fontSize,
                     language = language
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScanHistoryCard(
+    scan: ScanHistory,
+    fontSize: Float,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .width(155.dp)
+            .clickable { onClick() },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(PrimaryGreen.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MedicalServices,
+                    contentDescription = null,
+                    tint = PrimaryGreen,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = scan.nombre,
+                fontSize = (fontSize - 1).sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = scan.principioActivo,
+                fontSize = (fontSize - 3).sp,
+                color = PrimaryGreen,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = scan.dosis,
+                fontSize = (fontSize - 3).sp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(
+                        when (scan.tipo.lowercase()) {
+                            "genérico", "generico" -> Color(0xFF4CAF50).copy(alpha = 0.15f)
+                            "bioequivalente" -> Color(0xFF2196F3).copy(alpha = 0.15f)
+                            else -> Color(0xFFFF9800).copy(alpha = 0.15f)
+                        }
+                    )
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = scan.tipo,
+                    fontSize = (fontSize - 4).sp,
+                    color = when (scan.tipo.lowercase()) {
+                        "genérico", "generico" -> Color(0xFF388E3C)
+                        "bioequivalente" -> Color(0xFF1565C0)
+                        else -> Color(0xFFE65100)
+                    },
+                    fontWeight = FontWeight.Medium
                 )
             }
         }

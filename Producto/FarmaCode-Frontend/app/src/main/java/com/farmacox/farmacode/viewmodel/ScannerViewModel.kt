@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.farmacox.farmacode.data.dao.entity.Medication
+import com.farmacox.farmacode.data.dao.entity.ScanHistory
 import com.farmacox.farmacode.data.network.RetrofitClient
 import com.farmacox.farmacode.data.network.dto.OcrRequest
 import com.farmacox.farmacode.repository.MedicationRepository
@@ -41,11 +42,9 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
 
         viewModelScope.launch {
             try {
-                // Usamos split con el caracter literal '|'
                 val parts = cleanCode.split('|').map { it.trim() }
-                
+
                 if (parts.size >= 8) {
-                    // Formato extendido: Nombre|Principio|Dosis|Categoria|Presentacion|Laboratorio|Pais|Descripcion
                     val newMed = Medication(
                         id = "QR-${System.currentTimeMillis()}",
                         nombre = parts[0],
@@ -59,9 +58,8 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                         tipo = if (parts.size > 8) parts[8] else "Nuevo",
                         certificacionISP = true
                     )
-                    
                     repository.insertMedication(newMed)
-                    
+                    saveHistory(newMed)
                     _uiState.value = _uiState.value.copy(
                         foundMedication = newMed,
                         alternatives = emptyList(),
@@ -69,7 +67,6 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                         showResult = true
                     )
                 } else if (parts.size >= 4) {
-                    // Formato de 4 partes original (mantenemos compatibilidad)
                     val newMed = Medication(
                         id = "QR-${System.currentTimeMillis()}",
                         nombre = parts[0],
@@ -84,13 +81,14 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                         certificacionISP = true
                     )
                     repository.insertMedication(newMed)
+                    saveHistory(newMed)
                     _uiState.value = _uiState.value.copy(foundMedication = newMed, isLoading = false, showResult = true)
                 } else {
-                    // Búsqueda normal
                     val medications = repository.searchMedications(cleanCode).first()
                     if (medications.isNotEmpty()) {
                         val medication = medications.first()
                         val alternatives = repository.getAlternatives(medication.principioActivo, medication.id)
+                        saveHistory(medication)
                         _uiState.value = _uiState.value.copy(
                             foundMedication = medication,
                             alternatives = alternatives,
@@ -156,6 +154,7 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                             descripcion = dto.descripcion ?: ""
                         )
                     }
+                    saveHistory(medications.first())
                     _uiState.value = _uiState.value.copy(
                         foundMedication = medications.first(),
                         alternatives = medications.drop(1),
@@ -184,6 +183,24 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                 )
             }
         }
+    }
+
+    private suspend fun saveHistory(medication: Medication) {
+        repository.saveScanHistory(
+            ScanHistory(
+                medicationId = medication.id,
+                nombre = medication.nombre,
+                principioActivo = medication.principioActivo,
+                dosis = medication.dosis,
+                presentacion = medication.presentacion,
+                laboratorio = medication.laboratorio,
+                paisOrigen = medication.paisOrigen,
+                tipo = medication.tipo,
+                categoriaTerapeutica = medication.categoriaTerapeutica,
+                certificacionISP = medication.certificacionISP,
+                descripcion = medication.descripcion
+            )
+        )
     }
 
     fun setError(message: String) {

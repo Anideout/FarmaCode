@@ -6,17 +6,20 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.farmacox.farmacode.data.dao.MedicationDao
+import com.farmacox.farmacode.data.dao.ScanHistoryDao
 import com.farmacox.farmacode.data.dao.UserDao
 import com.farmacox.farmacode.data.dao.entity.Medication
+import com.farmacox.farmacode.data.dao.entity.ScanHistory
 import com.farmacox.farmacode.data.dao.entity.User
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Medication::class, User::class], version = 2, exportSchema = false)
+@Database(entities = [Medication::class, User::class, ScanHistory::class], version = 3, exportSchema = false)
 abstract class FarmaCodeDB : RoomDatabase() {
     abstract fun medicationDao(): MedicationDao
     abstract fun userDao(): UserDao
+    abstract fun scanHistoryDao(): ScanHistoryDao
 
     companion object {
         @Volatile
@@ -41,15 +44,14 @@ abstract class FarmaCodeDB : RoomDatabase() {
     private class DatabaseCallback: Callback() {
         override fun onCreate(db: SupportSQLiteDatabase) {
             super.onCreate(db)
-            INSTANCE?.let {
-                    database ->
+            INSTANCE?.let { database ->
                 CoroutineScope(Dispatchers.IO).launch {
-                    populateDatabase(database.medicationDao())
+                    populateDatabase(database.medicationDao(), database.scanHistoryDao())
                 }
             }
         }
 
-        suspend fun populateDatabase(medicationDao: MedicationDao) {
+        suspend fun populateDatabase(medicationDao: MedicationDao, scanHistoryDao: ScanHistoryDao) {
             val medications = listOf(
                 Medication(
                     id = "1",
@@ -208,7 +210,53 @@ abstract class FarmaCodeDB : RoomDatabase() {
                 )
             )
             medicationDao.insertALL(medications)
+
+            val now = System.currentTimeMillis()
+            val dayMs = 86_400_000L
+            scanHistoryDao.insertAll(listOf(
+                ScanHistory(
+                    medicationId = "6",
+                    nombre = "Paracetamol",
+                    principioActivo = "Paracetamol",
+                    dosis = "500 mg",
+                    presentacion = "20 comprimidos",
+                    laboratorio = "Chile Labs",
+                    paisOrigen = "Chile",
+                    tipo = "Genérico",
+                    categoriaTerapeutica = "Analgésico/Antipirético",
+                    certificacionISP = true,
+                    descripcion = "Analgésico y antipirético. Alivia el dolor leve a moderado y reduce la fiebre.",
+                    scannedAt = now - dayMs
+                ),
+                ScanHistory(
+                    medicationId = "4",
+                    nombre = "Omeprazol",
+                    principioActivo = "Omeprazol",
+                    dosis = "20 mg",
+                    presentacion = "28 cápsulas",
+                    laboratorio = "Chile Pharma",
+                    paisOrigen = "Chile",
+                    tipo = "Genérico",
+                    categoriaTerapeutica = "Antiulceroso",
+                    certificacionISP = true,
+                    descripcion = "Inhibidor de la bomba de protones. Reduce la producción de ácido gástrico.",
+                    scannedAt = now - 2 * dayMs
+                ),
+                ScanHistory(
+                    medicationId = "8",
+                    nombre = "Amoxicilina",
+                    principioActivo = "Amoxicilina",
+                    dosis = "500 mg",
+                    presentacion = "21 cápsulas",
+                    laboratorio = "Chile Lab",
+                    paisOrigen = "Chile",
+                    tipo = "Genérico",
+                    categoriaTerapeutica = "Antibiótico",
+                    certificacionISP = true,
+                    descripcion = "Antibiótico betalactámico de amplio espectro contra infecciones bacterianas.",
+                    scannedAt = now - 3 * dayMs
+                )
+            ))
         }
     }
-
 }

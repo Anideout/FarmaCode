@@ -1,0 +1,22 @@
+package com.farmacox.farmacode.data.dao.entity
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
+@Entity(tableName = "scan_history")
+data class ScanHistory(
+    @PrimaryKey(autoGenerate = true)
+    val id: Long = 0,
+    val medicationId: String,
+    val nombre: String,
+    val principioActivo: String,
+    val dosis: String,
+    val presentacion: String,
+    val laboratorio: String,
+    val paisOrigen: String,
+    val tipo: String,
+    val categoriaTerapeutica: String,
+    val certificacionISP: Boolean,
+    val descripcion: String,
+    val scannedAt: Long = System.currentTimeMillis()
+)
