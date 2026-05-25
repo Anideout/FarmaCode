@@ -1,6 +1,7 @@
 package com.farmacox.farmacode.ui.theme.screens
 
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -19,12 +20,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Search
@@ -68,7 +69,7 @@ import com.farmacox.farmacode.ui.theme.components.MedicationDetailDialog
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
 import com.farmacox.farmacode.viewmodel.HomeViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     isDarkTheme: Boolean,
@@ -101,16 +102,14 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 16.dp)
         ) {
+            // Header con buscador
             item {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(
                             brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    PrimaryGreen,
-                                    PrimaryGreen.copy(alpha = 0.8f)
-                                )
+                                colors = listOf(PrimaryGreen, PrimaryGreen.copy(alpha = 0.8f))
                             )
                         )
                         .statusBarsPadding()
@@ -136,9 +135,7 @@ fun HomeScreen(
                                         modifier = Modifier.size(32.dp)
                                     )
                                 }
-
                                 Spacer(modifier = Modifier.width(12.dp))
-
                                 Column {
                                     Text(
                                         text = "FarmaCode",
@@ -188,53 +185,25 @@ fun HomeScreen(
                 }
             }
 
-            // Historial de escaneos
-            if (uiState.scanHistory.isNotEmpty()) {
-                item {
-                    Column(modifier = Modifier.padding(top = 16.dp)) {
-                        Text(
-                            text = if (isEnglish) "Recently Scanned" else "Últimos escaneados",
-                            fontSize = (fontSize + 1).sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.padding(horizontal = 16.dp)
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        LazyRow(
-                            contentPadding = PaddingValues(horizontal = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            items(uiState.scanHistory) { scan ->
-                                ScanHistoryCard(
-                                    scan = scan,
-                                    fontSize = fontSize,
-                                    onClick = { viewModel.onScanHistorySelected(scan) }
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            item {
+            // Filtros de categoría — sticky para que queden fijos al hacer scroll
+            stickyHeader {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.background)
                         .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 16.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     uiState.categories.forEach { category ->
-                        val translatedCategory = when(category) {
-                            "Todos" -> if(isEnglish) "All" else "Todos"
-                            "Analgésicos" -> if(isEnglish) "Painkillers" else "Analgésicos"
-                            "Antibióticos" -> if(isEnglish) "Antibiotics" else "Antibióticos"
+                        val translatedCategory = when (category) {
+                            "Todos" -> if (isEnglish) "All" else "Todos"
+                            "Analgésicos" -> if (isEnglish) "Painkillers" else "Analgésicos"
+                            "Antibióticos" -> if (isEnglish) "Antibiotics" else "Antibióticos"
                             else -> category
                         }
-
                         val isSelected = category == uiState.selectedCategory ||
                                 (category == "Todos" && uiState.selectedCategory == null)
-
                         FilterChip(
                             selected = isSelected,
                             onClick = {
@@ -250,6 +219,41 @@ fun HomeScreen(
                 }
             }
 
+            // Historial de escaneos
+            if (uiState.scanHistory.isNotEmpty()) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = null,
+                            tint = PrimaryGreen,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = if (isEnglish) "Recently Scanned" else "Últimos escaneados",
+                            fontSize = (fontSize + 1).sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+                items(uiState.scanHistory) { scan ->
+                    ScanHistoryRow(
+                        scan = scan,
+                        fontSize = fontSize,
+                        onClick = { viewModel.onScanHistorySelected(scan) }
+                    )
+                }
+                item { Spacer(Modifier.height(8.dp)) }
+            }
+
+            // Lista de medicamentos
             if (uiState.isLoading) {
                 item {
                     Box(
@@ -300,26 +304,30 @@ fun HomeScreen(
 }
 
 @Composable
-private fun ScanHistoryCard(
+private fun ScanHistoryRow(
     scan: ScanHistory,
     fontSize: Float,
     onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
-            .width(155.dp)
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
                     .background(PrimaryGreen.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -327,35 +335,32 @@ private fun ScanHistoryCard(
                     imageVector = Icons.Default.MedicalServices,
                     contentDescription = null,
                     tint = PrimaryGreen,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
-            Spacer(Modifier.height(8.dp))
-            Text(
-                text = scan.nombre,
-                fontSize = (fontSize - 1).sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = scan.principioActivo,
-                fontSize = (fontSize - 3).sp,
-                color = PrimaryGreen,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(Modifier.height(2.dp))
-            Text(
-                text = scan.dosis,
-                fontSize = (fontSize - 3).sp,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(Modifier.height(6.dp))
+
+            Spacer(Modifier.width(12.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = scan.nombre,
+                    fontSize = fontSize.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Text(
+                    text = "${scan.principioActivo} · ${scan.dosis}",
+                    fontSize = (fontSize - 2).sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            Spacer(Modifier.width(8.dp))
+
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
@@ -366,11 +371,11 @@ private fun ScanHistoryCard(
                             else -> Color(0xFFFF9800).copy(alpha = 0.15f)
                         }
                     )
-                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
             ) {
                 Text(
                     text = scan.tipo,
-                    fontSize = (fontSize - 4).sp,
+                    fontSize = (fontSize - 3).sp,
                     color = when (scan.tipo.lowercase()) {
                         "genérico", "generico" -> Color(0xFF388E3C)
                         "bioequivalente" -> Color(0xFF1565C0)

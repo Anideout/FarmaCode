@@ -212,9 +212,16 @@ fun MedicationDetailDialog(
 
 @Composable
 private fun TypeBadge(tipo: String, fontSize: Float) {
-    val (backgroundColor, textColor) = when (tipo.uppercase()) {
-        "RX" -> Color(0xFFFD8090).copy(alpha = 0.15f) to Color(0xFFFD8090)
-        "OTC" -> Color(0xFF08DEEA).copy(alpha = 0.15f) to Color(0xFF08DEEA)
+    val tipoNorm = tipo.trim()
+    if (tipoNorm.isBlank() || tipoNorm == "N/D") return
+
+    val (backgroundColor, textColor) = when (tipoNorm.lowercase()) {
+        "genérico", "generico"  -> Color(0xFF4CAF50).copy(alpha = 0.15f) to Color(0xFF388E3C)
+        "bioequivalente"        -> Color(0xFF2196F3).copy(alpha = 0.15f) to Color(0xFF1565C0)
+        "referencia"            -> Color(0xFFFF9800).copy(alpha = 0.15f) to Color(0xFFE65100)
+        "escaneado"             -> Color(0xFF9C27B0).copy(alpha = 0.13f) to Color(0xFF7B1FA2)
+        "rx"                    -> Color(0xFFFD8090).copy(alpha = 0.15f) to Color(0xFFFD8090)
+        "otc"                   -> Color(0xFF08DEEA).copy(alpha = 0.15f) to Color(0xFF08DEEA)
         else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) to MaterialTheme.colorScheme.primary
     }
 
@@ -225,7 +232,7 @@ private fun TypeBadge(tipo: String, fontSize: Float) {
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
         Text(
-            text = tipo,
+            text = tipoNorm,
             fontSize = (fontSize - 4).sp,
             color = textColor,
             fontWeight = FontWeight.Bold

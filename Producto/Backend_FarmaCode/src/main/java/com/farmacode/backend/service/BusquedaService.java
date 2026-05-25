@@ -344,7 +344,7 @@ public class BusquedaService {
                 info.dosis(),
                 info.presentacion(),
                 info.viaAdministracion(),
-                "N/D",
+                "Escaneado",
                 false,
                 descripcion,
                 null

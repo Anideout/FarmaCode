@@ -166,8 +166,10 @@ public class GeminiApiService {
                 "Ejemplo CORRECTO: 'Levocetirizina Diclorhidrato'. Ejemplo INCORRECTO: 'HETERO Levocetirizina Diclorhidrato' o 'Ascend'.\n" +
                 "- 'principioActivo': si no aparece explícitamente, dedúcelo con tu conocimiento farmacológico.\n" +
                 "- 'laboratorio': nombre COMPLETO del fabricante (ej: 'Ascend Laboratories', 'HETERO', 'Pfizer'). Nunca solo la segunda palabra.\n" +
-                "- 'paisOrigen': país de fabricación o del laboratorio según tu conocimiento (ej: 'India', 'Chile'). " +
-                "Si el laboratorio es conocido, dedúcelo aunque no aparezca en el texto.\n" +
+                "- 'paisOrigen': OBLIGATORIO — infiere el país del laboratorio con tu conocimiento aunque no aparezca en el texto. " +
+                "Ejemplos: 'Ascend Laboratories' → 'India', 'Pfizer' → 'Estados Unidos', 'Bayer' → 'Alemania', " +
+                "'HETERO' → 'India', 'Roche' → 'Suiza', 'Laboratorio Chile' → 'Chile', 'Novartis' → 'Suiza', " +
+                "'AstraZeneca' → 'Reino Unido'. NUNCA uses N/D si identificaste el laboratorio.\n" +
                 "- 'viaAdministracion': usa solo: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
                 "- 'descripcionGeneral': OBLIGATORIO — escribe 1-2 oraciones sobre el uso terapéutico del medicamento " +
                 "usando tu conocimiento farmacológico. Nunca pongas N/D en este campo si conoces el principio activo.\n" +
@@ -218,8 +220,10 @@ public class GeminiApiService {
                     "Ejemplo CORRECTO: si ves 'ASCEND LABORATORIES AZITROMICINA 500MG' → nombreComercial='Azitromicina', laboratorio='Ascend Laboratories'. " +
                     "Ejemplo CORRECTO: 'Levocetirizina Diclorhidrato'. Ejemplo INCORRECTO: 'HETERO Levocetirizina Diclorhidrato' o 'Ascend'.\n" +
                     "- 'laboratorio': nombre COMPLETO del fabricante (ej: 'Ascend Laboratories', 'HETERO', 'Pfizer'). Nunca solo la segunda palabra.\n" +
-                    "- 'paisOrigen': país de fabricación o del laboratorio según tu conocimiento (ej: 'India', 'Chile'). " +
-                    "Si el laboratorio es conocido, dedúcelo aunque no aparezca en la imagen.\n" +
+                    "- 'paisOrigen': OBLIGATORIO — infiere el país del laboratorio con tu conocimiento aunque no aparezca en la imagen. " +
+                    "Ejemplos: 'Ascend Laboratories' → 'India', 'Pfizer' → 'Estados Unidos', 'Bayer' → 'Alemania', " +
+                    "'HETERO' → 'India', 'Roche' → 'Suiza', 'Laboratorio Chile' → 'Chile', 'Novartis' → 'Suiza', " +
+                    "'AstraZeneca' → 'Reino Unido'. NUNCA uses N/D si identificaste el laboratorio.\n" +
                     "- 'viaAdministracion': usa solo: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
                     "- 'descripcionGeneral': OBLIGATORIO — escribe 1-2 oraciones sobre el uso terapéutico del medicamento " +
                     "usando tu conocimiento farmacológico. Nunca pongas N/D en este campo si conoces el principio activo.\n" +
