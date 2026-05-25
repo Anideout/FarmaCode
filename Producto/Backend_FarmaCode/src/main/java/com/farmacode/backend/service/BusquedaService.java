@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +51,10 @@ public class BusquedaService {
         String nombreIdentificado = geminiApiService.identificarMedicamento(imagenBase64);
         log.info("Gemini identificó medicamento en foto: '{}'", nombreIdentificado);
 
+        if (nombreIdentificado.equalsIgnoreCase("NO_ES_MEDICAMENTO")) {
+            guardarHistorial("(foto no medicamento)", TipoBusqueda.FOTO, null, 0);
+            return new BioequivalentesResponseDTO("NO_ES_MEDICAMENTO", null, List.of());
+        }
         if (nombreIdentificado.equalsIgnoreCase("DESCONOCIDO") || nombreIdentificado.isBlank()) {
             guardarHistorial("(foto)", TipoBusqueda.FOTO, null, 0);
             return new BioequivalentesResponseDTO("No identificado", null, List.of());
@@ -103,9 +109,22 @@ public class BusquedaService {
                 if (!paIdentificado.isBlank() && !paIdentificado.equalsIgnoreCase("DESCONOCIDO")) {
                     info = new GeminiApiService.InfoMedicamento(
                             info.nombreComercial(), paIdentificado, info.dosis(),
-                            info.presentacion(), info.laboratorio(), info.viaAdministracion());
+                            info.presentacion(), info.laboratorio(), info.paisOrigen(),
+                            info.viaAdministracion(), info.descripcionGeneral());
                 }
             }
+        }
+
+        // Imagen completamente ilegible: Gemini no pudo extraer ningún dato útil
+        if (info.nombreComercial().equals("N/D") && info.principioActivo().equals("N/D")) {
+            guardarHistorial("(imagen ilegible)", TipoBusqueda.OCR, null, 0);
+            return new BioequivalentesResponseDTO("IMAGEN_ILEGIBLE", null, List.of());
+        }
+
+        // El objeto escaneado no es un medicamento
+        if ("NO_ES_MEDICAMENTO".equals(info.nombreComercial())) {
+            guardarHistorial("(no es medicamento)", TipoBusqueda.OCR, null, 0);
+            return new BioequivalentesResponseDTO("NO_ES_MEDICAMENTO", null, List.of());
         }
 
         // Paso 3: si Gemini identificó un principio activo que sí existe en BD → bioequivalentes
@@ -132,8 +151,24 @@ public class BusquedaService {
                 ? info.nombreComercial()
                 : extraerNombreDeTextoOcr(textoOcr);
         String principioGuardar = !info.principioActivo().equals("N/D") ? info.principioActivo() : null;
-        guardarHistorial(nombreMostrar, TipoBusqueda.OCR, principioGuardar, 0);
-        return construirRespuestaConGemini(info, nombreMostrar);
+
+        // Buscar bioequivalentes en BD por la primera palabra del principio activo (búsqueda parcial)
+        List<MedicamentoResponseDTO> bioequivalentesBD = new ArrayList<>();
+        if (principioGuardar != null) {
+            String primPalabra = principioGuardar.split("\\s+")[0];
+            if (primPalabra.length() >= 5) {
+                medicamentoRepository
+                        .findByPrincipioActivo_NombreContainingIgnoreCase(primPalabra)
+                        .stream()
+                        .map(medicamentoService::toDTO)
+                        .sorted(Comparator.comparing(dto ->
+                                dto.precioActual() != null ? dto.precioActual() : BigDecimal.valueOf(Long.MAX_VALUE)))
+                        .forEach(bioequivalentesBD::add);
+            }
+        }
+
+        guardarHistorial(nombreMostrar, TipoBusqueda.OCR, principioGuardar, bioequivalentesBD.size());
+        return construirRespuestaConGemini(info, nombreMostrar, bioequivalentesBD);
     }
 
     // ─── Lógica central de búsqueda ───────────────────────────────────────────
@@ -193,30 +228,41 @@ public class BusquedaService {
 
     // ─── OCR: calidad del texto ────────────────────────────────────────────────
 
-    /** Retorna true cuando el texto OCR tiene menos de 10 letras (demasiado ruidoso para Gemini texto). */
     private boolean esOcrInsuficiente(String textoOcr) {
         if (textoOcr == null || textoOcr.isBlank()) return true;
         long letras = textoOcr.chars().filter(Character::isLetter).count();
-        return letras < 10;
+        if (letras < 15) return true;
+        // Texto demasiado ruidoso: menos del 40% del contenido son letras
+        double ratioLetras = (double) letras / textoOcr.trim().length();
+        if (ratioLetras < 0.40) return true;
+        // Necesita al menos 2 palabras reconocibles (≥4 letras)
+        long palabrasValidas = Arrays.stream(textoOcr.split("\\s+"))
+                .filter(w -> w.matches("[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]{4,}"))
+                .count();
+        return palabrasValidas < 2;
     }
 
     // ─── OCR: búsqueda por tokens ──────────────────────────────────────────────
 
     private Optional<Medicamento> buscarMedicamentoEnTextoOcr(String textoOcr) {
         String textoLower = textoOcr.toLowerCase();
-        String[] tokens = textoOcr.split("[\\s\\n\\r,;.:()\\[\\]]+");
+        // Solo tokens que sean palabras reales (≥4 letras, empieza con letra)
+        String[] tokens = Arrays.stream(textoOcr.split("[\\s\\n\\r,;.:()\\[\\]/\\\\]+"))
+                .map(String::trim)
+                .filter(t -> t.length() >= 4 && Character.isLetter(t.charAt(0)))
+                .toArray(String[]::new);
 
+        // Primero intenta combos de 3 y 2 tokens; los de 1 token solo si son ≥5 chars
         for (int longitud = 3; longitud >= 1; longitud--) {
             for (int i = 0; i <= tokens.length - longitud; i++) {
                 StringBuilder combo = new StringBuilder();
                 for (int j = i; j < i + longitud; j++) {
-                    if (!tokens[j].isBlank()) {
-                        if (combo.length() > 0) combo.append(" ");
-                        combo.append(tokens[j].trim());
-                    }
+                    if (combo.length() > 0) combo.append(" ");
+                    combo.append(tokens[j]);
                 }
                 String termino = combo.toString().trim();
-                if (termino.length() < 3 || !Character.isLetter(termino.charAt(0))) continue;
+                // Para búsquedas de un solo token exigir al menos 5 caracteres
+                if (longitud == 1 && termino.length() < 5) continue;
 
                 List<Medicamento> resultados = medicamentoRepository.findByNombreComercialContainingIgnoreCase(termino);
                 for (Medicamento med : resultados) {
@@ -230,13 +276,19 @@ public class BusquedaService {
     }
 
     /**
-     * Verifica que todas las palabras significativas del nombre comercial están en el texto OCR,
-     * evitando falsos positivos (ej: laboratorio "Andrómaco" matcheando "Tramadol Andrómaco").
+     * Verifica que todas las palabras significativas (≥5 chars) del nombre comercial
+     * están presentes en el texto OCR, y que la primera palabra del nombre también
+     * está en el OCR (evita matchear solo por laboratorio o sufijos genéricos).
      */
     private boolean nombreComercialCoincideConOcr(String nombreComercial, String textoOcrLower) {
         String[] palabras = nombreComercial.split("\\s+");
+        // La primera palabra del nombre comercial SIEMPRE debe aparecer en el OCR
+        if (palabras.length > 0 && !textoOcrLower.contains(palabras[0].toLowerCase())) {
+            return false;
+        }
+        // Todas las palabras significativas deben estar presentes
         for (String palabra : palabras) {
-            if (palabra.length() >= 4 && !textoOcrLower.contains(palabra.toLowerCase())) {
+            if (palabra.length() >= 5 && !textoOcrLower.contains(palabra.toLowerCase())) {
                 return false;
             }
         }
@@ -246,26 +298,64 @@ public class BusquedaService {
     // ─── Placeholder con datos de Gemini ──────────────────────────────────────
 
     private BioequivalentesResponseDTO construirRespuestaConGemini(GeminiApiService.InfoMedicamento info,
-                                                                    String nombreMostrar) {
+                                                                    String nombreMostrar,
+                                                                    List<MedicamentoResponseDTO> bioequivalentes) {
+        String laboratorio = (info.laboratorio() == null || info.laboratorio().equals("N/D"))
+                ? "No detectado"
+                : info.laboratorio();
+        String paisOrigen = (info.paisOrigen() == null || info.paisOrigen().equals("N/D"))
+                ? "No detectado"
+                : info.paisOrigen();
+        String descripcion = (info.descripcionGeneral() == null || info.descripcionGeneral().equals("N/D"))
+                ? "Información no disponible para este medicamento."
+                : info.descripcionGeneral();
+
+        // Si el nombre comercial empieza con el laboratorio (ej: "HETERO Levocetirizina"), quitarlo
+        String nombreFinal = nombreMostrar;
+        if (!laboratorio.equals("No detectado") &&
+                nombreFinal.toUpperCase().startsWith(laboratorio.toUpperCase())) {
+            nombreFinal = nombreFinal.substring(laboratorio.length()).trim();
+        }
+
+        // Normalizar capitalización para los campos que Gemini suele devolver en MAYÚSCULAS
+        String nombreNorm      = normalizarCapitalizacion(nombreFinal);
+        String laboratorioNorm = normalizarCapitalizacion(laboratorio);
+        String principioNorm   = normalizarCapitalizacion(info.principioActivo());
+
         MedicamentoResponseDTO placeholder = new MedicamentoResponseDTO(
                 0L,
-                nombreMostrar,
-                info.principioActivo(),
+                nombreNorm,
+                principioNorm,
                 "N/D",
-                info.laboratorio(),
-                "N/D",
+                laboratorioNorm,
+                paisOrigen,
                 info.dosis(),
                 info.presentacion(),
                 info.viaAdministracion(),
                 "N/D",
                 false,
-                "Medicamento no encontrado en la base de datos. Información extraída del envase.",
+                descripcion,
                 null
         );
         String principioActivo = !info.principioActivo().equals("N/D")
-                ? info.principioActivo()
+                ? principioNorm
                 : "No identificado";
-        return new BioequivalentesResponseDTO(principioActivo, null, List.of(placeholder));
+        List<MedicamentoResponseDTO> medicamentos = new ArrayList<>();
+        medicamentos.add(placeholder);
+        medicamentos.addAll(bioequivalentes);
+        return new BioequivalentesResponseDTO(principioActivo, null, medicamentos);
+    }
+
+    private String normalizarCapitalizacion(String texto) {
+        if (texto == null || texto.isBlank() || texto.equals("N/D")) return texto;
+        String letras = texto.replaceAll("[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ]", "");
+        if (letras.isEmpty()) return texto;
+        long mayus = letras.chars().filter(Character::isUpperCase).count();
+        if ((double) mayus / letras.length() < 0.75) return texto;
+        return Arrays.stream(texto.split(" "))
+                .map(w -> w.isEmpty() ? w :
+                        Character.toUpperCase(w.charAt(0)) + w.substring(1).toLowerCase())
+                .collect(Collectors.joining(" "));
     }
 
     private String extraerNombreDeTextoOcr(String textoOcr) {

@@ -126,15 +126,29 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
         viewModelScope.launch {
             try {
                 val response = RetrofitClient.busquedaService.buscarPorOcr(OcrRequest(texto, imagenBase64))
+                if (response.principioActivo == "NO_ES_MEDICAMENTO") {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Esto no parece ser un medicamento. Apunta al envase de un medicamento."
+                    )
+                    return@launch
+                }
+                if (response.principioActivo == "IMAGEN_ILEGIBLE") {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "La imagen no es legible. Intenta con mejor iluminación o enfoca el envase."
+                    )
+                    return@launch
+                }
                 if (response.medicamentos.isNotEmpty()) {
                     val medications = response.medicamentos.map { dto ->
                         Medication(
                             id = dto.id.toString(),
-                            nombre = dto.nombre,
-                            principioActivo = dto.principioActivo ?: "",
+                            nombre = dto.nombre.toDisplayCase(),
+                            principioActivo = (dto.principioActivo ?: "").toDisplayCase(),
                             dosis = dto.dosis ?: "",
                             presentacion = dto.presentacion ?: "",
-                            laboratorio = dto.laboratorio ?: "",
+                            laboratorio = (dto.laboratorio ?: "").toDisplayCase(),
                             paisOrigen = dto.paisOrigen ?: "",
                             tipo = dto.tipo ?: "",
                             categoriaTerapeutica = dto.categoriaTerapeutica ?: "",
@@ -178,6 +192,16 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
 
     fun dismissResult() {
         _uiState.value = _uiState.value.copy(showResult = false, foundMedication = null)
+    }
+
+    private fun String.toDisplayCase(): String {
+        val letters = filter { it.isLetter() }
+        if (letters.isEmpty()) return this
+        val upperCount = letters.count { it.isUpperCase() }
+        if (upperCount.toDouble() / letters.length < 0.75) return this
+        return split(" ").joinToString(" ") { w ->
+            w.lowercase().replaceFirstChar { it.uppercaseChar() }
+        }
     }
 
     class Factory(private val repository: MedicationRepository) : ViewModelProvider.Factory {

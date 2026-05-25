@@ -45,10 +45,12 @@ public class GeminiApiService {
             String dosis,
             String presentacion,
             String laboratorio,
-            String viaAdministracion
+            String paisOrigen,
+            String viaAdministracion,
+            String descripcionGeneral
     ) {
         public static InfoMedicamento vacia() {
-            return new InfoMedicamento("N/D", "N/D", "N/D", "N/D", "N/D", "N/D");
+            return new InfoMedicamento("N/D", "N/D", "N/D", "N/D", "N/D", "N/D", "N/D", "N/D");
         }
     }
 
@@ -78,7 +80,9 @@ public class GeminiApiService {
                     "Responde ÚNICAMENTE con el nombre comercial del medicamento, sin explicaciones, " +
                     "sin dosis, sin laboratorio. Solo el nombre. " +
                     "Ejemplo: si ves 'Panadol 500mg', responde 'Panadol'. " +
-                    "Si no puedes identificar ningún medicamento, responde exactamente 'DESCONOCIDO'.");
+                    "Si no puedes identificar ningún medicamento, responde exactamente 'DESCONOCIDO'. " +
+                    "Si la imagen NO muestra un medicamento (ej: alimento, producto de limpieza, persona, objeto genérico, etc.), " +
+                    "responde exactamente 'NO_ES_MEDICAMENTO'.");
 
             Map<String, Object> content = new HashMap<>();
             content.put("parts", List.of(imagePart, textPart));
@@ -152,11 +156,22 @@ public class GeminiApiService {
         String prompt = "Analiza el siguiente texto extraído por OCR de un envase de medicamento.\n" +
                 "Texto OCR:\n" + textoOcr + "\n\n" +
                 "Responde ÚNICAMENTE con un JSON válido con esta estructura exacta (sin markdown, sin comentarios):\n" +
-                "{\"nombreComercial\":\"...\",\"principioActivo\":\"...\",\"dosis\":\"...\",\"presentacion\":\"...\",\"laboratorio\":\"...\",\"viaAdministracion\":\"...\"}\n" +
-                "IMPORTANTE: Para 'principioActivo', si no aparece explícitamente en el texto, dedúcelo usando tu conocimiento farmacológico. " +
-                "Muchos medicamentos tienen el mismo nombre comercial y principio activo (ej: 'Prednisona' → principioActivo: 'Prednisona'). " +
-                "Para 'viaAdministracion' usa solo: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
-                "Usa \"N/D\" solo si realmente es imposible determinarlo.";
+                "{\"nombreComercial\":\"...\",\"principioActivo\":\"...\",\"dosis\":\"...\",\"presentacion\":\"...\",\"laboratorio\":\"...\",\"paisOrigen\":\"...\",\"viaAdministracion\":\"...\",\"descripcionGeneral\":\"...\"}\n" +
+                "REGLAS IMPORTANTES:\n" +
+                "- PRIMERO: Si el texto NO corresponde a un envase de medicamento (ej: alimento, bebida, producto de limpieza, texto aleatorio, otro producto), " +
+                "responde ÚNICAMENTE con: {\"nombreComercial\":\"NO_ES_MEDICAMENTO\",\"principioActivo\":\"NO_ES_MEDICAMENTO\",\"dosis\":\"N/D\",\"presentacion\":\"N/D\",\"laboratorio\":\"N/D\",\"paisOrigen\":\"N/D\",\"viaAdministracion\":\"N/D\",\"descripcionGeneral\":\"N/D\"}\n" +
+                "- 'nombreComercial': SOLO el nombre del medicamento, NUNCA incluyas el nombre del laboratorio/fabricante. " +
+                "Si el medicamento es genérico sin marca propia, usa el nombre del principio activo como nombreComercial. " +
+                "Ejemplo CORRECTO: 'Levocetirizina Diclorhidrato'. Ejemplo INCORRECTO: 'HETERO Levocetirizina Diclorhidrato'.\n" +
+                "- 'principioActivo': si no aparece explícitamente, dedúcelo con tu conocimiento farmacológico.\n" +
+                "- 'laboratorio': solo el nombre del fabricante (ej: 'HETERO', 'Pfizer').\n" +
+                "- 'paisOrigen': país de fabricación o del laboratorio según tu conocimiento (ej: 'India', 'Chile'). " +
+                "Si el laboratorio es conocido, dedúcelo aunque no aparezca en el texto.\n" +
+                "- 'viaAdministracion': usa solo: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
+                "- 'descripcionGeneral': OBLIGATORIO — escribe 1-2 oraciones sobre el uso terapéutico del medicamento " +
+                "usando tu conocimiento farmacológico. Nunca pongas N/D en este campo si conoces el principio activo.\n" +
+                "- Usa capitalización normal en todos los campos (primera letra mayúscula, resto minúsculas). NUNCA escribas campos enteros en MAYÚSCULAS.\n" +
+                "Usa \"N/D\" solo si es realmente imposible determinarlo.";
         try {
             String respuesta = llamarGeminiTexto(prompt);
             InfoMedicamento info = parsearInfoMedicamento(respuesta);
@@ -193,9 +208,21 @@ public class GeminiApiService {
             textPart.put("text",
                     "Analiza esta imagen de un envase de medicamento y extrae la información estructurada.\n" +
                     "Responde ÚNICAMENTE con un JSON válido con esta estructura exacta (sin markdown, sin comentarios):\n" +
-                    "{\"nombreComercial\":\"...\",\"principioActivo\":\"...\",\"dosis\":\"...\",\"presentacion\":\"...\",\"laboratorio\":\"...\",\"viaAdministracion\":\"...\"}\n" +
-                    "Para 'viaAdministracion' usa solo: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
-                    "Si no puedes determinar un campo, usa exactamente \"N/D\".");
+                    "{\"nombreComercial\":\"...\",\"principioActivo\":\"...\",\"dosis\":\"...\",\"presentacion\":\"...\",\"laboratorio\":\"...\",\"paisOrigen\":\"...\",\"viaAdministracion\":\"...\",\"descripcionGeneral\":\"...\"}\n" +
+                    "REGLAS IMPORTANTES:\n" +
+                    "- PRIMERO: Si la imagen NO muestra un medicamento (ej: alimento, bebida, producto de limpieza, persona, objeto genérico, etc.), " +
+                    "responde ÚNICAMENTE con: {\"nombreComercial\":\"NO_ES_MEDICAMENTO\",\"principioActivo\":\"NO_ES_MEDICAMENTO\",\"dosis\":\"N/D\",\"presentacion\":\"N/D\",\"laboratorio\":\"N/D\",\"paisOrigen\":\"N/D\",\"viaAdministracion\":\"N/D\",\"descripcionGeneral\":\"N/D\"}\n" +
+                    "- 'nombreComercial': SOLO el nombre del medicamento, NUNCA incluyas el nombre del laboratorio/fabricante. " +
+                    "Si el medicamento es genérico sin marca propia, usa el nombre del principio activo como nombreComercial. " +
+                    "Ejemplo CORRECTO: 'Levocetirizina Diclorhidrato'. Ejemplo INCORRECTO: 'HETERO Levocetirizina Diclorhidrato'.\n" +
+                    "- 'laboratorio': solo el nombre del fabricante (ej: 'HETERO', 'Pfizer').\n" +
+                    "- 'paisOrigen': país de fabricación o del laboratorio según tu conocimiento (ej: 'India', 'Chile'). " +
+                    "Si el laboratorio es conocido, dedúcelo aunque no aparezca en la imagen.\n" +
+                    "- 'viaAdministracion': usa solo: Oral, Tópica, Intravenosa, Inhalada, Sublingual, N/D.\n" +
+                    "- 'descripcionGeneral': OBLIGATORIO — escribe 1-2 oraciones sobre el uso terapéutico del medicamento " +
+                    "usando tu conocimiento farmacológico. Nunca pongas N/D en este campo si conoces el principio activo.\n" +
+                    "- Usa capitalización normal en todos los campos (primera letra mayúscula, resto minúsculas). NUNCA escribas campos enteros en MAYÚSCULAS.\n" +
+                    "Usa \"N/D\" solo si es realmente imposible determinarlo.");
 
             Map<String, Object> content = new HashMap<>();
             content.put("parts", List.of(imagePart, textPart));
@@ -256,7 +283,6 @@ public class GeminiApiService {
 
     private InfoMedicamento parsearInfoMedicamento(String json) {
         try {
-            // Limpiar posibles bloques markdown que Gemini pueda añadir
             String limpio = json.replaceAll("(?s)```json\\s*", "").replaceAll("(?s)```\\s*", "").trim();
             Map<String, String> map = objectMapper.readValue(limpio, new TypeReference<>() {});
             return new InfoMedicamento(
@@ -265,7 +291,9 @@ public class GeminiApiService {
                     getOrND(map, "dosis"),
                     getOrND(map, "presentacion"),
                     getOrND(map, "laboratorio"),
-                    getOrND(map, "viaAdministracion")
+                    getOrND(map, "paisOrigen"),
+                    getOrND(map, "viaAdministracion"),
+                    getOrND(map, "descripcionGeneral")
             );
         } catch (Exception ex) {
             log.error("Error parseando respuesta JSON de Gemini: '{}' — {}", json, ex.getMessage());

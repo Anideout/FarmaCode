@@ -186,7 +186,6 @@ fun ScannerScreen(
                                     recognizer.process(inputImage)
                                         .addOnSuccessListener { result ->
                                             val texto = result.text.trim()
-                                            // Siempre enviamos imagen; el backend decide si usar texto o Vision
                                             viewModel.buscarPorTextoOcr(texto, imagenBase64)
                                         }
                                         .addOnFailureListener { e ->
