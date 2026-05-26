@@ -21,6 +21,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -267,6 +269,13 @@ public class BusquedaService {
                 List<Medicamento> resultados = medicamentoRepository.findByNombreComercialContainingIgnoreCase(termino);
                 for (Medicamento med : resultados) {
                     if (nombreComercialCoincideConOcr(med.getNombreComercial(), textoLower)) {
+                        int dosisOcr = extraerNumeroDosis(textoOcr);
+                        if (dosisOcr > 0) {
+                            int dosisMed = extraerNumeroDosis(med.getDosis());
+                            if (dosisMed > 0 && dosisOcr != dosisMed) {
+                                continue; // dosage mismatch — keep searching
+                            }
+                        }
                         return Optional.of(med);
                     }
                 }
@@ -368,6 +377,16 @@ public class BusquedaService {
                 .map(w -> w.isEmpty() ? w :
                         Character.toUpperCase(w.charAt(0)) + w.substring(1).toLowerCase())
                 .collect(Collectors.joining(" "));
+    }
+
+    private int extraerNumeroDosis(String texto) {
+        if (texto == null) return -1;
+        Matcher m = Pattern.compile("\\b(\\d+)\\s*(?:mg|mcg|ml|g|UI|IU)\\b",
+                Pattern.CASE_INSENSITIVE).matcher(texto);
+        if (m.find()) {
+            try { return Integer.parseInt(m.group(1)); } catch (NumberFormatException e) { return -1; }
+        }
+        return -1;
     }
 
     private String extraerNombreDeTextoOcr(String textoOcr) {

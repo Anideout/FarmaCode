@@ -115,6 +115,12 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
         onMedicationSelected(medication)
     }
 
+    fun onDeleteScanHistory(scan: ScanHistory) {
+        viewModelScope.launch {
+            repository.deleteScanHistory(scan)
+        }
+    }
+
     fun onDismissDialog() {
         _uiState.value = _uiState.value.copy(selectedMedication = null, alternatives = emptyList())
     }

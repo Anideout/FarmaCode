@@ -25,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.MedicalServices
@@ -247,7 +248,8 @@ fun HomeScreen(
                     ScanHistoryRow(
                         scan = scan,
                         fontSize = fontSize,
-                        onClick = { viewModel.onScanHistorySelected(scan) }
+                        onClick = { viewModel.onScanHistorySelected(scan) },
+                        onDelete = { viewModel.onDeleteScanHistory(scan) }
                     )
                 }
                 item { Spacer(Modifier.height(8.dp)) }
@@ -307,8 +309,12 @@ fun HomeScreen(
 private fun ScanHistoryRow(
     scan: ScanHistory,
     fontSize: Float,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
+    val tipoNorm = scan.tipo.trim().lowercase()
+    val showTipoBadge = tipoNorm.isNotBlank() && tipoNorm != "escaneado" && tipoNorm != "n/d"
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -321,7 +327,7 @@ private fun ScanHistoryRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp),
+                .padding(start = 14.dp, top = 12.dp, bottom = 12.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
@@ -359,29 +365,46 @@ private fun ScanHistoryRow(
                 )
             }
 
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(6.dp))
 
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(
-                        when (scan.tipo.lowercase()) {
-                            "genérico", "generico" -> Color(0xFF4CAF50).copy(alpha = 0.15f)
-                            "bioequivalente" -> Color(0xFF2196F3).copy(alpha = 0.15f)
-                            else -> Color(0xFFFF9800).copy(alpha = 0.15f)
-                        }
+            if (showTipoBadge) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(
+                            when (tipoNorm) {
+                                "genérico", "generico" -> Color(0xFF4CAF50).copy(alpha = 0.15f)
+                                "bioequivalente" -> Color(0xFF2196F3).copy(alpha = 0.15f)
+                                "referencia" -> Color(0xFFFF9800).copy(alpha = 0.15f)
+                                else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            }
+                        )
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = scan.tipo,
+                        fontSize = (fontSize - 3).sp,
+                        color = when (tipoNorm) {
+                            "genérico", "generico" -> Color(0xFF388E3C)
+                            "bioequivalente" -> Color(0xFF1565C0)
+                            "referencia" -> Color(0xFFE65100)
+                            else -> MaterialTheme.colorScheme.primary
+                        },
+                        fontWeight = FontWeight.Medium
                     )
-                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                }
+                Spacer(Modifier.width(2.dp))
+            }
+
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier.size(36.dp)
             ) {
-                Text(
-                    text = scan.tipo,
-                    fontSize = (fontSize - 3).sp,
-                    color = when (scan.tipo.lowercase()) {
-                        "genérico", "generico" -> Color(0xFF388E3C)
-                        "bioequivalente" -> Color(0xFF1565C0)
-                        else -> Color(0xFFE65100)
-                    },
-                    fontWeight = FontWeight.Medium
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar",
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }

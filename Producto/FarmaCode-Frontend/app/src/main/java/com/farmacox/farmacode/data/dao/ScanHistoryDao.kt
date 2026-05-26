@@ -1,6 +1,7 @@
 package com.farmacox.farmacode.data.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -17,4 +18,7 @@ interface ScanHistoryDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(scans: List<ScanHistory>)
+
+    @Delete
+    suspend fun delete(scan: ScanHistory)
 }

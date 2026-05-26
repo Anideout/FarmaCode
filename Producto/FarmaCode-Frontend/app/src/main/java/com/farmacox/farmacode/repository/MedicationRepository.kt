@@ -30,4 +30,6 @@ class MedicationRepository(
     fun getRecentScans(): Flow<List<ScanHistory>> = scanHistoryDao.getRecentScans()
 
     suspend fun saveScanHistory(scan: ScanHistory) = scanHistoryDao.insert(scan)
+
+    suspend fun deleteScanHistory(scan: ScanHistory) = scanHistoryDao.delete(scan)
 }
