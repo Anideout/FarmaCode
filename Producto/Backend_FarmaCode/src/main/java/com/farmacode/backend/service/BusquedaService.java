@@ -129,29 +129,42 @@ public class BusquedaService {
             return new BioequivalentesResponseDTO("NO_ES_MEDICAMENTO", null, List.of());
         }
 
+        // Nombre a mostrar — se computa aquí para usarlo tanto en paso 3 como en paso 4
+        String nombreMostrar = !info.nombreComercial().equals("N/D")
+                ? info.nombreComercial()
+                : extraerNombreDeTextoOcr(textoOcr);
+
         // Paso 3: si Gemini identificó un principio activo que sí existe en BD → bioequivalentes
         if (!info.principioActivo().equals("N/D") && !info.principioActivo().equalsIgnoreCase("DESCONOCIDO")) {
             Optional<PrincipioActivo> paEnBD = principioActivoRepository.findByNombreIgnoreCase(info.principioActivo());
             if (paEnBD.isPresent()) {
                 log.info("Principio activo '{}' encontrado en BD vía Gemini OCR, buscando bioequivalentes...",
                         info.principioActivo());
-                List<MedicamentoResponseDTO> medicamentos = medicamentoRepository
+                List<MedicamentoResponseDTO> bioequivalentes = medicamentoRepository
                         .findByPrincipioActivo_NombreIgnoreCase(info.principioActivo())
                         .stream()
                         .map(medicamentoService::toDTO)
                         .sorted(Comparator.comparing(
                                 dto -> dto.precioActual() != null ? dto.precioActual() : BigDecimal.valueOf(Long.MAX_VALUE)))
                         .collect(Collectors.toList());
-                guardarHistorial(info.nombreComercial(), TipoBusqueda.OCR, info.principioActivo(), medicamentos.size());
+
+                // Si Gemini extrajo dosis o laboratorio concretos, construir placeholder con esos datos
+                // para que la app muestre el envase escaneado (ej: 600mg) y no el primer bioequivalente de BD
+                boolean tieneInfoEspecifica = (!info.dosis().equals("N/D") && !info.dosis().isBlank())
+                        || (!info.laboratorio().equals("N/D") && !info.laboratorio().isBlank());
+                if (tieneInfoEspecifica) {
+                    guardarHistorial(nombreMostrar, TipoBusqueda.OCR, info.principioActivo(), bioequivalentes.size());
+                    return construirRespuestaConGemini(info, nombreMostrar, bioequivalentes);
+                }
+
+                guardarHistorial(nombreMostrar, TipoBusqueda.OCR, info.principioActivo(), bioequivalentes.size());
                 return new BioequivalentesResponseDTO(
-                        info.principioActivo(), paEnBD.get().getCategoria(), medicamentos);
+                        info.principioActivo(), paEnBD.get().getCategoria(), bioequivalentes);
             }
         }
 
         // Paso 4: placeholder con los datos que Gemini pudo extraer del envase
-        String nombreMostrar = !info.nombreComercial().equals("N/D")
-                ? info.nombreComercial()
-                : extraerNombreDeTextoOcr(textoOcr);
+        // (nombreMostrar ya fue calculado antes del paso 3)
         String principioGuardar = !info.principioActivo().equals("N/D") ? info.principioActivo() : null;
 
         // Buscar bioequivalentes en BD por la primera palabra del principio activo (búsqueda parcial)
@@ -178,6 +191,7 @@ public class BusquedaService {
     private BioequivalentesResponseDTO ejecutarBusqueda(String nombreComercial, TipoBusqueda tipoBusqueda) {
         String principioActivoNombre = null;
         String categoria = null;
+        Long matchId = null;
 
         // Paso 1: buscar medicamento directamente en BD
         Optional<Medicamento> medicamentoEnBD =
@@ -187,6 +201,7 @@ public class BusquedaService {
             PrincipioActivo pa = medicamentoEnBD.get().getPrincipioActivo();
             principioActivoNombre = pa.getNombre();
             categoria = pa.getCategoria();
+            matchId = medicamentoEnBD.get().getId();
             log.info("Principio activo encontrado en BD para '{}': {}", nombreComercial, principioActivoNombre);
         } else {
             // Paso 2: consultar a Gemini si no está en BD
@@ -205,17 +220,19 @@ public class BusquedaService {
         }
 
         // Paso 3: buscar bioequivalentes por principio activo
+        // Si se encontró un medicamento exacto en BD, ponerlo primero en la lista
         List<MedicamentoResponseDTO> medicamentos = List.of();
         if (principioActivoNombre != null && !principioActivoNombre.isBlank()) {
+            final Long foundId = matchId;
             medicamentos = medicamentoRepository
                     .findByPrincipioActivo_NombreIgnoreCase(principioActivoNombre)
                     .stream()
                     .map(medicamentoService::toDTO)
-                    .sorted(Comparator.comparing(
-                            dto -> dto.precioActual() != null
+                    .sorted(Comparator
+                            .<MedicamentoResponseDTO>comparingInt(dto -> foundId != null && foundId.equals(dto.id()) ? 0 : 1)
+                            .thenComparing(dto -> dto.precioActual() != null
                                     ? dto.precioActual()
-                                    : BigDecimal.valueOf(Long.MAX_VALUE)
-                    ))
+                                    : BigDecimal.valueOf(Long.MAX_VALUE)))
                     .collect(Collectors.toList());
         }
 
