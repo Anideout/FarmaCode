@@ -1,0 +1,192 @@
+{
+  "app": "FarmaCode",
+  "modulo": "Ayuda",
+  "generado": "26-06-11",
+  "id_inicio": 47,
+  "resumen": [
+    {
+      "id": "TC-047",
+      "area": "Ayuda",
+      "nombre": "Pantalla muestra 4 pasos numerados de uso de la app",
+      "objetivo": "Verificar que la Pantalla de Centro de Ayuda muestra exactamente 4 pasos numerados que explican cómo usar la aplicación",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-048",
+      "area": "Ayuda",
+      "nombre": "Pantalla muestra glosario con 4 términos farmacéuticos",
+      "objetivo": "Verificar que el glosario de la pantalla de Ayuda contiene los 4 términos: Genérico, Bioequivalente, Referencia y Principio Activo, cada uno con su definición",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-049",
+      "area": "Ayuda",
+      "nombre": "Aviso de seguridad visible en tarjeta de color ámbar",
+      "objetivo": "Verificar que la pantalla de Ayuda muestra un aviso de seguridad (ej: no automedicación) en una tarjeta de color ámbar/amarillo claramente visible",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-050",
+      "area": "Ayuda",
+      "nombre": "Texto del paso 2 menciona código de barras en lugar de OCR — FACO-LEG-007",
+      "objetivo": "Verificar que el texto del paso 2 de la guía describe 'escanear código de barras' (funcionalidad obsoleta) en lugar de describir el OCR de texto de envase actual, confirmando el hallazgo FACO-LEG-007",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-051",
+      "area": "Ayuda",
+      "nombre": "Sin llamadas HTTP — pantalla de contenido estático",
+      "objetivo": "Verificar que HelpScreen no realiza ninguna llamada al backend Railway ni consultas a Room SQLite durante toda la sesión de la pantalla",
+      "prioridad": "Baja",
+      "tipo": "Integración",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    }
+  ],
+  "detalle": [
+    {
+      "id": "TC-047",
+      "area": "Ayuda",
+      "nombre": "Pantalla muestra 4 pasos numerados de uso de la app",
+      "objetivo": "Verificar que la Pantalla de Centro de Ayuda muestra exactamente 4 pasos numerados que explican cómo usar la aplicación",
+      "precondiciones": [
+        "Usuario autenticado en cualquier pantalla con barra de navegación inferior"
+      ],
+      "pasos": [
+        "1. Pulsar el ícono de Ayuda en la barra de navegación inferior (o navegar desde Perfil → Ayuda)",
+        "2. Verificar que la pantalla de Centro de Ayuda se muestra",
+        "3. Hacer scroll por el contenido",
+        "4. Contar y verificar que hay exactamente 4 pasos numerados visibles",
+        "5. Verificar que cada paso tiene un número y un texto descriptivo"
+      ],
+      "datos_prueba": "N/A — contenido estático de la pantalla",
+      "resultado_esperado": "Pantalla visible con 4 pasos numerados. Cada paso tiene número y descripción. El contenido es legible y tiene scroll si es necesario.",
+      "criterio_aprobacion": "PASA si se muestran exactamente 4 pasos numerados con texto. FALLA si faltan pasos, el número es incorrecto, o el contenido no es legible.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "HelpScreen es contenido estático (sin ViewModel con estado dinámico). No requiere conexión a internet. El contenido puede estar hardcodeado en el Composable.",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-048",
+      "area": "Ayuda",
+      "nombre": "Pantalla muestra glosario con 4 términos farmacéuticos",
+      "objetivo": "Verificar que el glosario de la pantalla de Ayuda contiene los 4 términos: Genérico, Bioequivalente, Referencia y Principio Activo, cada uno con su definición",
+      "precondiciones": [
+        "Usuario autenticado, pantalla de Ayuda visible"
+      ],
+      "pasos": [
+        "1. Navegar a la pantalla de Ayuda",
+        "2. Hacer scroll hasta la sección del glosario",
+        "3. Verificar que aparece el término 'Genérico' con su definición",
+        "4. Verificar que aparece el término 'Bioequivalente' con su definición",
+        "5. Verificar que aparece el término 'Referencia' con su definición",
+        "6. Verificar que aparece el término 'Principio Activo' con su definición"
+      ],
+      "datos_prueba": "N/A — contenido estático del glosario",
+      "resultado_esperado": "Los 4 términos farmacéuticos están presentes con sus respectivas definiciones en la sección del glosario.",
+      "criterio_aprobacion": "PASA si los 4 términos aparecen con definiciones. FALLA si falta algún término o su definición está vacía.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Glosario confirmado en el levantamiento funcional FACO-HLP-001: términos Genérico, Bioequivalente, Referencia, Principio Activo. Contenido completamente estático.",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-049",
+      "area": "Ayuda",
+      "nombre": "Aviso de seguridad visible en tarjeta de color ámbar",
+      "objetivo": "Verificar que la pantalla de Ayuda muestra un aviso de seguridad (ej: no automedicación o consultar profesional de salud) en una tarjeta de color ámbar/amarillo claramente visible al usuario",
+      "precondiciones": [
+        "Usuario autenticado, pantalla de Ayuda visible"
+      ],
+      "pasos": [
+        "1. Navegar a la pantalla de Ayuda",
+        "2. Hacer scroll por toda la pantalla",
+        "3. Localizar la tarjeta de color ámbar/amarillo",
+        "4. Verificar que contiene un aviso de seguridad (advertencia sobre consultar profesional de salud o no automedicar)",
+        "5. Verificar que la tarjeta es visualmente diferenciada del resto del contenido por su color"
+      ],
+      "datos_prueba": "N/A — elemento visual estático",
+      "resultado_esperado": "Tarjeta ámbar/amarilla visible con texto de aviso de seguridad. El color la diferencia claramente del contenido regular.",
+      "criterio_aprobacion": "PASA si la tarjeta ámbar con aviso de seguridad es visible en la pantalla. FALLA si no aparece o el color no la diferencia del contenido regular.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "El aviso de seguridad en tarjeta ámbar fue documentado en el levantamiento funcional FACO-HLP-001. Refuerza que la app es informativa y no reemplaza la consulta médica.",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-050",
+      "area": "Ayuda",
+      "nombre": "Texto del paso 2 menciona código de barras en lugar de OCR — FACO-LEG-007",
+      "objetivo": "Verificar que el texto del paso 2 de la guía describe 'escanear código de barras' (funcionalidad obsoleta, ML Kit BarcodeScanning) en lugar de describir el OCR de texto de envase actual (ML Kit TextRecognition), confirmando el hallazgo FACO-LEG-007",
+      "precondiciones": [
+        "Usuario autenticado, pantalla de Ayuda visible"
+      ],
+      "pasos": [
+        "1. Navegar a la pantalla de Ayuda",
+        "2. Localizar el paso 2 de la guía de uso",
+        "3. Leer el texto del paso 2",
+        "4. Verificar si el texto menciona 'código de barras' (funcionalidad obsoleta) o describe 'OCR' / 'fotografiar el texto del envase' (funcionalidad actual)"
+      ],
+      "datos_prueba": "N/A — texto estático del paso 2",
+      "resultado_esperado": "Comportamiento correcto (post-corrección): el texto del paso 2 describe la funcionalidad OCR actual (fotografiar el envase para extraer texto). Estado actual: el texto menciona 'código de barras' (FACO-LEG-007 confirmada).",
+      "criterio_aprobacion": "PASA si el texto del paso 2 describe correctamente la funcionalidad OCR de texto (corrección aplicada). FALLA si el texto menciona 'código de barras' (FACO-LEG-007 presente).",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "FACO-LEG-007: HelpScreen.kt texto del paso 2 describe 'Escanear código' con referencia a código de barras. La funcionalidad actual usa ML Kit TextRecognition (no BarcodeScanning). Corrección: actualizar el texto del paso 2 para describir 'Fotografia el envase del medicamento para que la app extraiga el texto automáticamente' o similar.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-051",
+      "area": "Ayuda",
+      "nombre": "Sin llamadas HTTP — pantalla de contenido estático",
+      "objetivo": "Verificar que HelpScreen no realiza ninguna llamada al backend Railway ni consultas a Room SQLite durante toda la sesión en la pantalla de Ayuda",
+      "precondiciones": [
+        "Usuario autenticado",
+        "Herramienta de monitoreo de red activa"
+      ],
+      "pasos": [
+        "1. Iniciar captura de tráfico HTTP y monitoreo de Room",
+        "2. Navegar a la pantalla de Ayuda",
+        "3. Hacer scroll completo por la pantalla (arriba y abajo)",
+        "4. Permanecer en la pantalla al menos 10 segundos",
+        "5. Verificar el log de tráfico — no debe haber peticiones HTTP",
+        "6. Verificar que no hay consultas a Room en logcat"
+      ],
+      "datos_prueba": "N/A",
+      "resultado_esperado": "Cero peticiones HTTP. Cero consultas a Room. La pantalla funciona completamente offline con contenido estático.",
+      "criterio_aprobacion": "PASA si no hay ninguna actividad de red ni BD durante la sesión en Ayuda. FALLA si se detecta cualquier llamada HTTP o consulta a Room.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "FACO-HLP-001 documentado como 'Solo Lectura' sin dependencias externas. HelpScreen no tiene ViewModel con llamadas a repositorios. Contenido completamente hardcodeado en el Composable.",
+      "prioridad": "Baja",
+      "tipo": "Integración",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    }
+  ]
+}

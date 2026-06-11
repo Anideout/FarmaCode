@@ -1,0 +1,456 @@
+{
+  "app": "FarmaCode",
+  "modulo": "Autenticación",
+  "generado": "26-06-11",
+  "id_inicio": 1,
+  "resumen": [
+    {
+      "id": "TC-001",
+      "area": "Autenticación",
+      "nombre": "Login con credenciales válidas",
+      "objetivo": "Verificar que LoginViewModel.onLoginClick() consulta Room (tabla users), compara password en texto plano y navega a 'home' estableciendo UserSession.userEmail",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-002",
+      "area": "Autenticación",
+      "nombre": "Login con contraseña incorrecta",
+      "objetivo": "Verificar que onLoginClick() muestra 'Credenciales incorrectas' cuando user.password != state.password y no navega a home",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-003",
+      "area": "Autenticación",
+      "nombre": "Login con email no registrado en Room",
+      "objetivo": "Verificar que onLoginClick() muestra 'Credenciales incorrectas' cuando getUserByEmail() retorna null",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-004",
+      "area": "Autenticación",
+      "nombre": "Login con campos vacíos",
+      "objetivo": "Verificar que onLoginClick() muestra 'Completa todos los campos' cuando email o contraseña están en blanco, bloqueando el acceso a Room",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-005",
+      "area": "Autenticación",
+      "nombre": "Login con formato de email inválido",
+      "objetivo": "Verificar que onLoginClick() muestra 'Email inválido' cuando android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() retorna false",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-006",
+      "area": "Autenticación",
+      "nombre": "Registro exitoso de usuario nuevo",
+      "objetivo": "Verificar que RegisterViewModel.onRegisterClick() supera todas las validaciones, inserta el usuario en Room (tabla users) con password en texto plano y navega a 'login'",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-007",
+      "area": "Autenticación",
+      "nombre": "Registro con email ya existente en Room",
+      "objetivo": "Verificar que onRegisterClick() muestra 'El usuario ya existe' cuando getUserByEmail() devuelve un usuario y no inserta duplicado en tabla users",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-008",
+      "area": "Autenticación",
+      "nombre": "Registro con contraseña de 5 caracteres — límite inferior inválido",
+      "objetivo": "Verificar que la validación password.length < 6 rechaza contraseñas de exactamente 5 caracteres (valor límite bajo)",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-009",
+      "area": "Autenticación",
+      "nombre": "Registro con contraseña de 6 caracteres — límite inferior válido",
+      "objetivo": "Verificar que la validación password.length < 6 acepta contraseñas de exactamente 6 caracteres (valor límite válido)",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-010",
+      "area": "Autenticación",
+      "nombre": "Registro con confirmación de contraseña diferente",
+      "objetivo": "Verificar que la validación password != confirmPassword muestra 'Las contraseñas no coinciden' y no inserta el usuario",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-011",
+      "area": "Autenticación",
+      "nombre": "Contraseñas almacenadas en texto plano — FACO-LEG-005",
+      "objetivo": "Verificar que el campo password en la tabla users de Room SQLite almacena la contraseña sin ningún tipo de hashing, exponiendo las credenciales ante acceso directo a la BD (hallazgo FACO-LEG-005)",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-012",
+      "area": "Autenticación",
+      "nombre": "Regresión flujo completo autenticación",
+      "objetivo": "Verificar el flujo end-to-end: registro nuevo usuario → login con las mismas credenciales → acceso a pantalla home sin errores intermedios",
+      "prioridad": "Alta",
+      "tipo": "Regresión",
+      "riesgo": "Alto",
+      "origen": "todos"
+    }
+  ],
+  "detalle": [
+    {
+      "id": "TC-001",
+      "area": "Autenticación",
+      "nombre": "Login con credenciales válidas",
+      "objetivo": "Verificar que LoginViewModel.onLoginClick() consulta Room (tabla users), compara password en texto plano y navega a 'home' estableciendo UserSession.userEmail",
+      "precondiciones": [
+        "Usuario registrado en Room SQLite (tabla users) con email 'tester@farmacode.cl' y password 'Test123' en texto plano",
+        "App instalada y ejecutándose en emulador Android API 26+ o dispositivo físico",
+        "Sin sesión activa previa (UserSession.userEmail == null)"
+      ],
+      "pasos": [
+        "1. Abrir la app — se muestra la ruta 'login' (Pantalla de Inicio de Sesión)",
+        "2. Ingresar 'tester@farmacode.cl' en el campo Email",
+        "3. Ingresar 'Test123' en el campo Contraseña",
+        "4. Pulsar el botón 'Iniciar Sesión'",
+        "5. Verificar que la pantalla navega a la ruta 'home' (barra de navegación inferior visible con ítems: Inicio, Scanner, Chat, Ayuda, Perfil)",
+        "6. Verificar en tiempo de ejecución que UserSession.userEmail == 'tester@farmacode.cl'"
+      ],
+      "datos_prueba": "Email: tester@farmacode.cl / Contraseña: Test123 (texto plano) / Rol: USUARIO_REGISTRADO / Room SQLite: tabla users",
+      "resultado_esperado": "Pantalla 'home' visible con barra de navegación inferior. UserSession.userEmail establecido con el email ingresado. Sin mensajes de error visibles.",
+      "criterio_aprobacion": "PASA si la ruta activa es 'home', la barra de navegación inferior es visible y UserSession.userEmail == 'tester@farmacode.cl'. FALLA si aparece mensaje de error o la navegación no ocurre.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla users"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "La autenticación es completamente local — no hay llamada al backend Railway. UserSession es un objeto Kotlin singleton en memoria; se pierde si el proceso Android es terminado por el sistema. No hay JWT, sesión servidor ni token persistente.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-002",
+      "area": "Autenticación",
+      "nombre": "Login con contraseña incorrecta",
+      "objetivo": "Verificar que onLoginClick() muestra 'Credenciales incorrectas' cuando user.password != state.password y no navega a home",
+      "precondiciones": [
+        "Usuario registrado en Room SQLite (tabla users) con email 'tester@farmacode.cl' y password 'Test123'",
+        "App en pantalla 'login'"
+      ],
+      "pasos": [
+        "1. Ingresar 'tester@farmacode.cl' en el campo Email",
+        "2. Ingresar 'WrongPass' en el campo Contraseña",
+        "3. Pulsar el botón 'Iniciar Sesión'",
+        "4. Verificar que aparece el mensaje de error 'Credenciales incorrectas'",
+        "5. Verificar que la ruta activa sigue siendo 'login'"
+      ],
+      "datos_prueba": "Email: tester@farmacode.cl / Contraseña: WrongPass (incorrecta) / Contraseña real: Test123",
+      "resultado_esperado": "Mensaje 'Credenciales incorrectas' visible en la pantalla. Ruta activa permanece en 'login'. UserSession.userEmail sigue siendo null.",
+      "criterio_aprobacion": "PASA si se muestra 'Credenciales incorrectas' y no hay navegación a 'home'. FALLA si navega a home con contraseña incorrecta.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla users"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "La comparación es user.password == state.password en texto plano (LoginViewModel línea 51). Sin hashing, cualquier diferencia de un carácter produce 'Credenciales incorrectas'.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-003",
+      "area": "Autenticación",
+      "nombre": "Login con email no registrado en Room",
+      "objetivo": "Verificar que onLoginClick() muestra 'Credenciales incorrectas' cuando getUserByEmail() retorna null",
+      "precondiciones": [
+        "No existe ningún usuario con email 'fantasma@farmacode.cl' en Room SQLite tabla users",
+        "App en pantalla 'login'"
+      ],
+      "pasos": [
+        "1. Ingresar 'fantasma@farmacode.cl' en el campo Email",
+        "2. Ingresar 'Test123' en el campo Contraseña",
+        "3. Pulsar el botón 'Iniciar Sesión'",
+        "4. Verificar mensaje de error",
+        "5. Verificar que la ruta activa sigue siendo 'login'"
+      ],
+      "datos_prueba": "Email: fantasma@farmacode.cl (no registrado) / Contraseña: Test123",
+      "resultado_esperado": "Mensaje 'Credenciales incorrectas' visible. No hay navegación a 'home'.",
+      "criterio_aprobacion": "PASA si aparece 'Credenciales incorrectas' y la ruta es 'login'. FALLA si navega a home con email inexistente.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla users"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "UserDao.getUserByEmail() retorna User? — cuando null, la condición user != null && user.password == state.password falla y se muestra el mensaje de error.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-004",
+      "area": "Autenticación",
+      "nombre": "Login con campos vacíos",
+      "objetivo": "Verificar que onLoginClick() muestra 'Completa todos los campos' cuando email o contraseña están en blanco, bloqueando el acceso a Room",
+      "precondiciones": [
+        "App en pantalla 'login'"
+      ],
+      "pasos": [
+        "1. Dejar el campo Email vacío, ingresar 'Test123' en Contraseña",
+        "2. Pulsar 'Iniciar Sesión' — verificar mensaje de error",
+        "3. Ingresar 'tester@farmacode.cl' en Email, dejar Contraseña vacía",
+        "4. Pulsar 'Iniciar Sesión' — verificar mensaje de error",
+        "5. Dejar ambos campos vacíos y pulsar 'Iniciar Sesión'"
+      ],
+      "datos_prueba": "Caso A: Email vacío / Contraseña Test123. Caso B: Email tester@farmacode.cl / Contraseña vacía. Caso C: Ambos vacíos.",
+      "resultado_esperado": "En los tres casos se muestra el mensaje 'Completa todos los campos'. No se realiza consulta a Room.",
+      "criterio_aprobacion": "PASA si aparece 'Completa todos los campos' en los tres subcasos y no hay navegación. FALLA si cualquier subcaso omite la validación.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Validación en LoginViewModel: if (state.email.isBlank() || state.password.isBlank()). La consulta a Room no se ejecuta.",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-005",
+      "area": "Autenticación",
+      "nombre": "Login con formato de email inválido",
+      "objetivo": "Verificar que onLoginClick() muestra 'Email inválido' cuando android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() retorna false",
+      "precondiciones": [
+        "App en pantalla 'login'"
+      ],
+      "pasos": [
+        "1. Ingresar 'usuarioinvalido' (sin @ ni dominio) en el campo Email",
+        "2. Ingresar 'Test123' en el campo Contraseña",
+        "3. Pulsar 'Iniciar Sesión'",
+        "4. Verificar mensaje de error"
+      ],
+      "datos_prueba": "Email inválido: 'usuarioinvalido' / Email inválido 2: 'usuario@' / Email válido para contraste: 'tester@farmacode.cl'",
+      "resultado_esperado": "Mensaje 'Email inválido' visible. No se ejecuta consulta a Room.",
+      "criterio_aprobacion": "PASA si aparece 'Email inválido' con el email de formato incorrecto. FALLA si con email inválido se intenta consultar Room o navegar.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Usa android.util.Patterns.EMAIL_ADDRESS — patrón RFC 2822 simplificado incluido en el SDK Android.",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-006",
+      "area": "Autenticación",
+      "nombre": "Registro exitoso de usuario nuevo",
+      "objetivo": "Verificar que RegisterViewModel.onRegisterClick() supera todas las validaciones, inserta el usuario en Room (tabla users) con password en texto plano y navega a 'login'",
+      "precondiciones": [
+        "No existe usuario con email 'nuevo@farmacode.cl' en Room SQLite tabla users",
+        "App en pantalla 'register'"
+      ],
+      "pasos": [
+        "1. Ingresar 'Juan Test' en el campo Nombre",
+        "2. Ingresar 'nuevo@farmacode.cl' en el campo Email",
+        "3. Ingresar 'Test456' en el campo Contraseña",
+        "4. Ingresar 'Test456' en el campo Confirmar Contraseña",
+        "5. Pulsar el botón 'Crear Cuenta'",
+        "6. Verificar que la pantalla navega a la ruta 'login'",
+        "7. Inspeccionar tabla users de Room: adb shell run-as com.farmacox.farmacode sqlite3 /data/data/com.farmacox.farmacode/databases/farmacode_db 'SELECT name,email,password FROM users ORDER BY id DESC LIMIT 1'"
+      ],
+      "datos_prueba": "Nombre: Juan Test / Email: nuevo@farmacode.cl / Contraseña: Test456 (texto plano) / Rol: USUARIO_REGISTRADO",
+      "resultado_esperado": "Navegación exitosa a ruta 'login'. Row insertado en tabla users con name='Juan Test', email='nuevo@farmacode.cl', password='Test456' (texto plano, sin hash).",
+      "criterio_aprobacion": "PASA si la ruta activa es 'login' y el row existe en users. FALLA si no navega o el usuario no es insertado.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla users"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Contraseña insertada en texto plano — FACO-LEG-005. Corrección recomendada: aplicar BCrypt en RegisterViewModel antes del userRepository.insertUser(newUser).",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-007",
+      "area": "Autenticación",
+      "nombre": "Registro con email ya existente en Room",
+      "objetivo": "Verificar que onRegisterClick() muestra 'El usuario ya existe' cuando getUserByEmail() devuelve un usuario y no inserta duplicado en tabla users",
+      "precondiciones": [
+        "Usuario con email 'existente@farmacode.cl' ya registrado en Room SQLite tabla users",
+        "App en pantalla 'register'"
+      ],
+      "pasos": [
+        "1. Ingresar 'Otro Usuario' en el campo Nombre",
+        "2. Ingresar 'existente@farmacode.cl' en el campo Email",
+        "3. Ingresar 'Test789' en el campo Contraseña",
+        "4. Ingresar 'Test789' en Confirmar Contraseña",
+        "5. Pulsar 'Crear Cuenta'",
+        "6. Verificar mensaje de error",
+        "7. Verificar en tabla users que NO se insertó un segundo row con ese email"
+      ],
+      "datos_prueba": "Email duplicado: existente@farmacode.cl",
+      "resultado_esperado": "Mensaje 'El usuario ya existe' visible. No se navega a 'login'. Count de rows en users con ese email sigue siendo 1.",
+      "criterio_aprobacion": "PASA si aparece 'El usuario ya existe' y no hay duplicados en Room. FALLA si el usuario se inserta igualmente.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla users"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Consulta previa: UserDao.getUserByEmail() — SELECT * FROM users WHERE email = :email LIMIT 1. Si retorna non-null, se detiene el registro.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-008",
+      "area": "Autenticación",
+      "nombre": "Registro con contraseña de 5 caracteres — límite inferior inválido",
+      "objetivo": "Verificar que la validación password.length < 6 rechaza contraseñas de exactamente 5 caracteres (valor límite bajo del rango válido ≥ 6)",
+      "precondiciones": [
+        "App en pantalla 'register', email único no registrado"
+      ],
+      "pasos": [
+        "1. Completar campos Nombre y Email correctamente",
+        "2. Ingresar 'Ab1cd' (5 caracteres) en el campo Contraseña",
+        "3. Ingresar 'Ab1cd' en Confirmar Contraseña",
+        "4. Pulsar 'Crear Cuenta'",
+        "5. Verificar mensaje de error"
+      ],
+      "datos_prueba": "Contraseña: 'Ab1cd' (5 chars) — un carácter por debajo del mínimo",
+      "resultado_esperado": "Mensaje 'La contraseña debe contener al menos 6 caracteres'. No se inserta el usuario.",
+      "criterio_aprobacion": "PASA si aparece el mensaje de longitud mínima con contraseña de 5 chars. FALLA si acepta contraseñas de 5 caracteres.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Validación en RegisterViewModel: if (state.password.length < 6). El límite inferior del rango válido es exactamente 6.",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-009",
+      "area": "Autenticación",
+      "nombre": "Registro con contraseña de 6 caracteres — límite inferior válido",
+      "objetivo": "Verificar que la validación password.length < 6 acepta contraseñas de exactamente 6 caracteres (valor límite válido del rango ≥ 6)",
+      "precondiciones": [
+        "App en pantalla 'register', email único no registrado (ej: limite6@farmacode.cl)"
+      ],
+      "pasos": [
+        "1. Completar campos Nombre con 'Test Limite' y Email con 'limite6@farmacode.cl'",
+        "2. Ingresar 'Ab1cde' (6 caracteres exactos) en el campo Contraseña",
+        "3. Ingresar 'Ab1cde' en Confirmar Contraseña",
+        "4. Pulsar 'Crear Cuenta'",
+        "5. Verificar que la app navega a 'login'"
+      ],
+      "datos_prueba": "Contraseña: 'Ab1cde' (6 chars exactos) — límite mínimo válido",
+      "resultado_esperado": "Registro exitoso, navegación a 'login'. Usuario insertado en tabla users de Room.",
+      "criterio_aprobacion": "PASA si con 6 caracteres el registro se completa y navega a 'login'. FALLA si rechaza contraseñas de exactamente 6 caracteres.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla users"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Caso complementario de TC-008. Juntos validan el comportamiento en la frontera password.length == 5 (rechaza) vs password.length == 6 (acepta).",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-010",
+      "area": "Autenticación",
+      "nombre": "Registro con confirmación de contraseña diferente",
+      "objetivo": "Verificar que la validación password != confirmPassword muestra 'Las contraseñas no coinciden' y no inserta el usuario en Room",
+      "precondiciones": [
+        "App en pantalla 'register'"
+      ],
+      "pasos": [
+        "1. Completar campos Nombre y Email correctamente",
+        "2. Ingresar 'Test123' en el campo Contraseña",
+        "3. Ingresar 'Test124' (diferente) en el campo Confirmar Contraseña",
+        "4. Pulsar 'Crear Cuenta'",
+        "5. Verificar mensaje de error"
+      ],
+      "datos_prueba": "Contraseña: 'Test123' / Confirmación: 'Test124' (difiere en el último carácter)",
+      "resultado_esperado": "Mensaje 'Las contraseñas no coinciden'. No se navega a 'login'. No se inserta row en tabla users.",
+      "criterio_aprobacion": "PASA si aparece 'Las contraseñas no coinciden' y el usuario no es creado. FALLA si permite registro con contraseñas distintas.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Validación en RegisterViewModel: if (state.password != state.confirmPassword). Se ejecuta después de la validación de longitud.",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-011",
+      "area": "Autenticación",
+      "nombre": "Contraseñas almacenadas en texto plano — FACO-LEG-005",
+      "objetivo": "Verificar que el campo password en la tabla users de Room SQLite almacena la contraseña sin ningún tipo de hashing (FACO-LEG-005), exponiendo las credenciales ante acceso directo a la BD en dispositivos rooteados",
+      "precondiciones": [
+        "Usuario registrado con email 'segtest@farmacode.cl' y contraseña 'Seguridad1' en la app",
+        "Emulador Android con acceso adb o dispositivo rooteado para inspeccionar la BD Room"
+      ],
+      "pasos": [
+        "1. Registrar usuario con email 'segtest@farmacode.cl' y contraseña 'Seguridad1'",
+        "2. En terminal, ejecutar: adb shell run-as com.farmacox.farmacode",
+        "3. Acceder a la BD Room: sqlite3 /data/data/com.farmacox.farmacode/databases/farmacode_db",
+        "4. Ejecutar: SELECT email, password FROM users WHERE email='segtest@farmacode.cl';",
+        "5. Observar el valor del campo password"
+      ],
+      "datos_prueba": "Email: segtest@farmacode.cl / Contraseña registrada: Seguridad1",
+      "resultado_esperado": "Comportamiento correcto (post-corrección): el campo password contiene un hash bcrypt/Argon2, NO la contraseña original. Estado actual: el campo password = 'Seguridad1' (texto plano — FACO-LEG-005 confirmada).",
+      "criterio_aprobacion": "PASA si password contiene un hash irreconocible (corrección aplicada). FALLA si password == 'Seguridad1' en texto claro (vulnerabilidad FACO-LEG-005 presente).",
+      "objetos_bd_involucrados": ["Room SQLite: tabla users"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "FACO-LEG-005: LoginViewModel línea 51 compara user.password == state.password (texto plano). RegisterViewModel línea 74 inserta User con password = state.password sin hashing. Corrección: usar BCrypt u otra función de hash unidireccional antes del insertUser() y en la comparación del login.",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-012",
+      "area": "Autenticación",
+      "nombre": "Regresión flujo completo autenticación",
+      "objetivo": "Verificar el flujo end-to-end: registro de nuevo usuario → login con las mismas credenciales → acceso exitoso a pantalla home, sin bloqueos ni errores intermedios",
+      "precondiciones": [
+        "BD Room SQLite sin usuario con email 'regresion@farmacode.cl'",
+        "App iniciada en pantalla 'login'"
+      ],
+      "pasos": [
+        "1. Pulsar el enlace 'Regístrate' en pantalla login — navega a 'register'",
+        "2. Completar registro: nombre 'Regresion Test', email 'regresion@farmacode.cl', contraseña 'Regres1', confirmación 'Regres1'",
+        "3. Pulsar 'Crear Cuenta' — verificar navegación a 'login'",
+        "4. Ingresar 'regresion@farmacode.cl' y 'Regres1' en login",
+        "5. Pulsar 'Iniciar Sesión' — verificar navegación a 'home'",
+        "6. Verificar que UserSession.userEmail == 'regresion@farmacode.cl'",
+        "7. Verificar que la barra de navegación inferior muestra 5 ítems: Inicio, Scanner, Chat, Ayuda, Perfil"
+      ],
+      "datos_prueba": "Email: regresion@farmacode.cl / Contraseña: Regres1 / Rol: USUARIO_REGISTRADO",
+      "resultado_esperado": "Registro exitoso → login exitoso → pantalla home visible con barra de navegación. Sin mensajes de error en ningún paso.",
+      "criterio_aprobacion": "PASA si todos los pasos se completan sin error y la pantalla home es accesible. FALLA si cualquier paso falla o muestra error inesperado.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla users"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Cubre la ruta crítica completa del módulo. Verificar también que startDestination = 'login' y que al presionar Back desde home no vuelve a login (backstack gestionado correctamente).",
+      "prioridad": "Alta",
+      "tipo": "Regresión",
+      "riesgo": "Alto",
+      "origen": "todos"
+    }
+  ]
+}

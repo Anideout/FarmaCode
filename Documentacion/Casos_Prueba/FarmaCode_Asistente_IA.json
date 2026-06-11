@@ -1,0 +1,296 @@
+{
+  "app": "FarmaCode",
+  "modulo": "Asistente IA",
+  "generado": "26-06-11",
+  "id_inicio": 39,
+  "resumen": [
+    {
+      "id": "TC-039",
+      "area": "Asistente IA",
+      "nombre": "Mensaje de bienvenida automático al iniciar el chat",
+      "objetivo": "Verificar que al navegar a la ruta 'chat', el asistente muestra automáticamente un mensaje de bienvenida en la burbuja del asistente sin que el usuario escriba nada",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-040",
+      "area": "Asistente IA",
+      "nombre": "Keyword 'alternativa' retorna lista de medicamentos de Room",
+      "objetivo": "Verificar que un mensaje con la palabra 'alternativa' hace que ChatViewModel llame repository.searchMedications() en Room y devuelva resultados como respuesta del asistente",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-041",
+      "area": "Asistente IA",
+      "nombre": "Keyword 'genérico' retorna lista de medicamentos de Room",
+      "objetivo": "Verificar que un mensaje con la palabra 'genérico' activa la búsqueda en Room y el asistente retorna la lista de medicamentos relacionados",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-042",
+      "area": "Asistente IA",
+      "nombre": "Keyword de búsqueda ('busca X') retorna medicamentos de Room",
+      "objetivo": "Verificar que verbos de búsqueda como 'busca', 'buscar', 'encuentra', 'dime', 'muéstrame', 'cual', 'que es' activan searchMedications() en Room con el término extraído del mensaje",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-043",
+      "area": "Asistente IA",
+      "nombre": "Keywords 'isp' o 'certificación' retornan respuesta informativa",
+      "objetivo": "Verificar que mensajes con 'isp' o 'certificación' generan una respuesta del asistente con información sobre el registro ISP de Chile, sin consultar Room",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-044",
+      "area": "Asistente IA",
+      "nombre": "Consulta sin keyword reconocida retorna respuesta genérica",
+      "objetivo": "Verificar que cuando ninguna keyword del mensaje coincide con las listas predefinidas, el asistente retorna una respuesta genérica indicando sus limitaciones, sin llamar a Room",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-045",
+      "area": "Asistente IA",
+      "nombre": "Chat no realiza ninguna llamada HTTP al backend Railway ni a Gemini API",
+      "objetivo": "Verificar que ChatViewModel solo usa MedicationRepository (Room SQLite) para las búsquedas por keywords y no invoca ningún endpoint del backend Railway ni la Gemini API",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-046",
+      "area": "Asistente IA",
+      "nombre": "Regresión flujo chat farmacéutico",
+      "objetivo": "Verificar el flujo end-to-end del chat: bienvenida → saludo → búsqueda por keyword → consulta ISP → consulta sin keyword → respuesta genérica, sin errores",
+      "prioridad": "Baja",
+      "tipo": "Regresión",
+      "riesgo": "Bajo",
+      "origen": "todos"
+    }
+  ],
+  "detalle": [
+    {
+      "id": "TC-039",
+      "area": "Asistente IA",
+      "nombre": "Mensaje de bienvenida automático al iniciar el chat",
+      "objetivo": "Verificar que al navegar a la ruta 'chat', el asistente muestra automáticamente un mensaje de bienvenida en la burbuja del asistente sin que el usuario escriba nada",
+      "precondiciones": [
+        "Usuario autenticado, ruta activa en cualquier pantalla distinta a 'chat'"
+      ],
+      "pasos": [
+        "1. Pulsar el ícono de Chat en la barra de navegación inferior",
+        "2. Verificar que la pantalla de chat se muestra",
+        "3. Verificar que aparece un mensaje de bienvenida en la burbuja del asistente (sin que el usuario haya escrito nada)"
+      ],
+      "datos_prueba": "N/A — comportamiento automático al cargar la pantalla",
+      "resultado_esperado": "Mensaje de bienvenida visible en la burbuja del asistente al entrar a la pantalla de chat.",
+      "criterio_aprobacion": "PASA si hay un mensaje de bienvenida del asistente al cargar la pantalla. FALLA si la pantalla inicia vacía sin mensaje.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "ChatViewModel o ChatScreen inicializa el historial de mensajes con un mensaje de bienvenida predefinido al crearse. No requiere conexión a internet.",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-040",
+      "area": "Asistente IA",
+      "nombre": "Keyword 'alternativa' retorna lista de medicamentos de Room",
+      "objetivo": "Verificar que un mensaje con la palabra 'alternativa' hace que ChatViewModel llame repository.searchMedications() en Room y devuelva resultados como respuesta del asistente",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'chat'",
+        "Room SQLite con medicamentos en tabla medications"
+      ],
+      "pasos": [
+        "1. En el campo de texto del chat, escribir 'busco una alternativa para Paracetamol'",
+        "2. Pulsar el botón de enviar",
+        "3. Verificar que el mensaje del usuario aparece en la burbuja de usuario",
+        "4. Verificar que el asistente responde con una lista de medicamentos de Room relacionados con el término extraído",
+        "5. Verificar en logcat que se invocó MedicationRepository.searchMedications() y NO hubo llamada HTTP"
+      ],
+      "datos_prueba": "Mensaje: 'busco una alternativa para Paracetamol' / Room con medicamentos de Paracetamol o similares",
+      "resultado_esperado": "Respuesta del asistente con lista de medicamentos. Búsqueda realizada en Room. Sin llamadas al backend.",
+      "criterio_aprobacion": "PASA si el asistente responde con medicamentos de Room. FALLA si no responde, retorna lista vacía cuando hay datos en Room, o realiza llamada HTTP.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "ChatViewModel.processUserMessage() verifica keywords en el mensaje. La keyword 'alternativa' activa searchMedications(). No hay llamada a Gemini ni al backend Railway — RN-015.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-041",
+      "area": "Asistente IA",
+      "nombre": "Keyword 'genérico' retorna lista de medicamentos de Room",
+      "objetivo": "Verificar que un mensaje con la palabra 'genérico' activa la búsqueda en Room y el asistente retorna la lista de medicamentos relacionados",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'chat'",
+        "Room SQLite con medicamentos genéricos en tabla medications"
+      ],
+      "pasos": [
+        "1. Escribir 'hay algún genérico de Ibuprofeno disponible'",
+        "2. Pulsar enviar",
+        "3. Verificar respuesta del asistente con medicamentos de Room",
+        "4. Verificar ausencia de llamadas HTTP"
+      ],
+      "datos_prueba": "Mensaje: 'hay algún genérico de Ibuprofeno disponible'",
+      "resultado_esperado": "El asistente responde con medicamentos de Room que contengan el término extraído del mensaje (Ibuprofeno o similar).",
+      "criterio_aprobacion": "PASA si responde con medicamentos. FALLA si no activa búsqueda o hace llamada HTTP.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Keyword 'genérico' — misma lógica que 'alternativa'. Extraer el término de búsqueda del mensaje y llamar searchMedications().",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-042",
+      "area": "Asistente IA",
+      "nombre": "Keyword de búsqueda ('busca X') retorna medicamentos de Room",
+      "objetivo": "Verificar que verbos de búsqueda como 'busca', 'buscar', 'encuentra', 'dime', 'muéstrame', 'cual', 'que es' activan searchMedications() en Room con el término extraído del mensaje",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'chat'",
+        "Room SQLite con medicamentos"
+      ],
+      "pasos": [
+        "1. Escribir 'busca Amoxicilina' y enviar — verificar lista de medicamentos en respuesta",
+        "2. Escribir 'encuentra un medicamento para el dolor' y enviar — verificar respuesta",
+        "3. Escribir 'muéstrame Paracetamol' y enviar — verificar respuesta",
+        "4. Verificar que en todos los casos la búsqueda se realiza en Room sin HTTP"
+      ],
+      "datos_prueba": "Mensajes: 'busca Amoxicilina' / 'encuentra un medicamento para el dolor' / 'muéstrame Paracetamol'",
+      "resultado_esperado": "En todos los casos el asistente retorna medicamentos de Room relevantes al término de búsqueda.",
+      "criterio_aprobacion": "PASA si los verbos de búsqueda activan searchMedications() y se muestran resultados. FALLA si algún verbo no es reconocido o se hace llamada HTTP.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Keywords monitoreadas: 'buscar', 'busca', 'encuentra', 'dime', 'muéstrame', 'cual', 'que es' — RN-015. ChatViewModel extrae el término de búsqueda como las palabras después del verbo.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-043",
+      "area": "Asistente IA",
+      "nombre": "Keywords 'isp' o 'certificación' retornan respuesta informativa",
+      "objetivo": "Verificar que mensajes con 'isp' o 'certificación' generan una respuesta del asistente con información sobre el registro ISP de Chile, sin consultar Room ni el backend",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'chat'"
+      ],
+      "pasos": [
+        "1. Escribir '¿qué es el certificado ISP?' y enviar",
+        "2. Verificar que el asistente responde con información sobre el Instituto de Salud Pública",
+        "3. Escribir 'cómo sé si un medicamento tiene certificación' y enviar",
+        "4. Verificar respuesta informativa sobre certificación ISP"
+      ],
+      "datos_prueba": "Mensajes: '¿qué es el certificado ISP?' / 'cómo sé si un medicamento tiene certificación'",
+      "resultado_esperado": "Respuesta del asistente con información predefinida sobre ISP. Sin búsqueda en Room ni llamadas HTTP.",
+      "criterio_aprobacion": "PASA si aparece información relevante sobre ISP/certificación. FALLA si el asistente no reconoce la keyword o retorna respuesta genérica.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Keywords 'isp' y 'certificación' — RN-015. La respuesta es texto estático predefinido en ChatViewModel, no una consulta dinámica.",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-044",
+      "area": "Asistente IA",
+      "nombre": "Consulta sin keyword reconocida retorna respuesta genérica",
+      "objetivo": "Verificar que cuando ninguna keyword del mensaje coincide con las listas predefinidas, el asistente retorna una respuesta genérica indicando sus limitaciones, sin llamar a Room ni al backend",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'chat'"
+      ],
+      "pasos": [
+        "1. Escribir 'explícame la farmacocinética del diazepam' (consulta técnica fuera del alcance) y enviar",
+        "2. Verificar que el asistente responde con un mensaje genérico (ej: 'Solo puedo ayudarte con búsquedas de medicamentos y alternativas genéricas')",
+        "3. Verificar que NO se realizó búsqueda en Room ni llamada HTTP"
+      ],
+      "datos_prueba": "Mensajes fuera de keywords: 'explícame la farmacocinética del diazepam' / 'cuál es la temperatura de almacenamiento de insulina' / 'hola qué tal'",
+      "resultado_esperado": "Respuesta genérica del asistente. Sin consultas a Room ni HTTP. La UI permanece funcional.",
+      "criterio_aprobacion": "PASA si el asistente responde con mensaje genérico para consultas fuera de keywords. FALLA si la app crashea o no responde.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "RN-015: cualquier consulta que no contenga las keywords monitoreadas recibe una respuesta genérica predefinida. El asistente no tiene IA generativa (sin Gemini, sin GPT).",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-045",
+      "area": "Asistente IA",
+      "nombre": "Chat no realiza ninguna llamada HTTP al backend Railway ni a Gemini API",
+      "objetivo": "Verificar que ChatViewModel solo usa MedicationRepository (Room SQLite) para las búsquedas por keywords y no invoca ningún endpoint del backend Railway ni la Gemini API",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'chat'",
+        "Herramienta de monitoreo de red activa (Android Studio Network Profiler o logcat filtrado por OkHttp)"
+      ],
+      "pasos": [
+        "1. Iniciar captura de tráfico HTTP",
+        "2. Enviar al menos 5 mensajes al chat: saludo, búsqueda por keyword, consulta ISP, alternativa de medicamento, consulta sin keyword",
+        "3. Revisar el log de tráfico — verificar que NO hay peticiones a farmacode-production-c60c.up.railway.app ni a generativelanguage.googleapis.com"
+      ],
+      "datos_prueba": "5 mensajes variados al chat",
+      "resultado_esperado": "Cero peticiones HTTP durante toda la sesión de chat. Todas las respuestas provienen de lógica local o Room SQLite.",
+      "criterio_aprobacion": "PASA si no hay ninguna petición HTTP registrada. FALLA si se detecta cualquier llamada al backend o Gemini desde el chat.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "ChatViewModel solo depende de MedicationRepository que delega a MedicationDao (Room). RetrofitClient solo es usado en ScannerViewModel. RN-015 confirma que no hay integración con Gemini ni backend desde el chat.",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-046",
+      "area": "Asistente IA",
+      "nombre": "Regresión flujo chat farmacéutico",
+      "objetivo": "Verificar el flujo end-to-end del chat: bienvenida automática → saludo → búsqueda por keyword → consulta ISP → consulta sin keyword → respuesta genérica, sin errores ni llamadas HTTP",
+      "precondiciones": [
+        "Usuario autenticado",
+        "Room con medicamentos disponibles"
+      ],
+      "pasos": [
+        "1. Navegar a 'chat' — verificar mensaje de bienvenida automático",
+        "2. Enviar 'hola' — verificar respuesta de saludo",
+        "3. Enviar 'busca Ibuprofeno' — verificar lista de medicamentos de Room",
+        "4. Enviar 'qué es el ISP' — verificar respuesta informativa",
+        "5. Enviar 'hay algún genérico de Amoxicilina' — verificar lista de Room",
+        "6. Enviar mensaje sin keywords — verificar respuesta genérica",
+        "7. Verificar que el historial de mensajes en pantalla muestra todos los intercambios correctamente"
+      ],
+      "datos_prueba": "Room con medicamentos. Mensajes: 'hola', 'busca Ibuprofeno', 'qué es el ISP', 'hay algún genérico de Amoxicilina', 'pregunta fuera de scope'",
+      "resultado_esperado": "Todos los mensajes son respondidos correctamente. El historial de chat se muestra ordenado. Sin llamadas HTTP. Sin errores.",
+      "criterio_aprobacion": "PASA si todos los pasos se completan correctamente. FALLA si alguna keyword no es reconocida, hay error en la UI o se detecta llamada HTTP.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "El chat es completamente offline. El historial de mensajes se mantiene en el estado del ViewModel durante la sesión (no persiste en Room).",
+      "prioridad": "Baja",
+      "tipo": "Regresión",
+      "riesgo": "Bajo",
+      "origen": "todos"
+    }
+  ]
+}
