@@ -12,6 +12,9 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import com.farmacode.backend.dto.request.ChatRequestDTO;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -255,6 +258,63 @@ public class GeminiApiService {
         } catch (Exception ex) {
             log.error("Error al extraer información de imagen con Gemini Vision: {}", ex.getMessage());
             return InfoMedicamento.vacia();
+        }
+    }
+
+    /**
+     * Conversación multi-turno con Gemini restringida a farmacología.
+     */
+    public String chatFarmaceutico(List<ChatRequestDTO.TurnoChat> historial, String nuevoMensaje, String systemPrompt) {
+        if (apiKey == null || apiKey.isBlank()) return "Error: API key no configurada.";
+
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            Map<String, Object> sysPart = new HashMap<>();
+            sysPart.put("text", systemPrompt);
+            Map<String, Object> systemInstruction = new HashMap<>();
+            systemInstruction.put("parts", List.of(sysPart));
+
+            List<Map<String, Object>> contents = new ArrayList<>();
+            if (historial != null) {
+                for (ChatRequestDTO.TurnoChat turno : historial) {
+                    Map<String, Object> part = new HashMap<>();
+                    part.put("text", turno.contenido());
+                    Map<String, Object> content = new HashMap<>();
+                    content.put("role", turno.rol());
+                    content.put("parts", List.of(part));
+                    contents.add(content);
+                }
+            }
+
+            Map<String, Object> newPart = new HashMap<>();
+            newPart.put("text", nuevoMensaje);
+            Map<String, Object> newContent = new HashMap<>();
+            newContent.put("role", "user");
+            newContent.put("parts", List.of(newPart));
+            contents.add(newContent);
+
+            Map<String, Object> thinkingConfig = new HashMap<>();
+            thinkingConfig.put("thinkingBudget", 0);
+            Map<String, Object> generationConfig = new HashMap<>();
+            generationConfig.put("thinkingConfig", thinkingConfig);
+
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("system_instruction", systemInstruction);
+            payload.put("contents", contents);
+            payload.put("generationConfig", generationConfig);
+
+            String url = apiUrl + "?key=" + apiKey;
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
+            @SuppressWarnings("rawtypes")
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
+            return extraerTextoRespuesta(response.getBody());
+
+        } catch (Exception ex) {
+            log.error("Error en chatFarmaceutico con Gemini: {}", ex.getMessage());
+            return "Lo siento, ocurrió un error al procesar tu consulta. Por favor intenta nuevamente.";
         }
     }
 
