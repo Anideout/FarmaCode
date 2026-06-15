@@ -77,7 +77,6 @@ fun ChatScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .imePadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             Box(
@@ -171,6 +170,7 @@ fun ChatScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(MaterialTheme.colorScheme.surface)
+                    .imePadding()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
