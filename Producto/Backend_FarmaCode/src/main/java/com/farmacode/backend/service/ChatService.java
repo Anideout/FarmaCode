@@ -25,8 +25,14 @@ public class ChatService {
             "responde educadamente que solo puedes ayudar con consultas farmacéuticas. " +
             "Responde SIEMPRE en el mismo idioma que usa el usuario. " +
             "Sé conciso, claro y profesional. " +
-            "IMPORTANTE: No reemplazas a un médico. Si el usuario describe síntomas graves, " +
-            "indícale que consulte a un profesional de salud.";
+            "FORMATO: Responde SIEMPRE en texto plano, sin markdown, sin asteriscos, sin negritas, " +
+            "sin guiones de lista al inicio. Usa saltos de línea para separar ideas. " +
+            "Cuando enumeres opciones, escríbelas como '1.', '2.', '3.' sin asteriscos ni guiones. " +
+            "AVISO MÉDICO: Cuando la pregunta involucre diagnóstico, tratamiento de enfermedades " +
+            "específicas, síntomas, o dosis exactas para un paciente concreto, al final de tu respuesta " +
+            "agrega siempre: " +
+            "\"⚠️ Esta información es solo orientativa. Para un diagnóstico o tratamiento específico, " +
+            "consulta con un médico o profesional de la salud.\"";
 
     public ChatResponseDTO chat(ChatRequestDTO request) {
         String respuesta = geminiApiService.chatFarmaceutico(
