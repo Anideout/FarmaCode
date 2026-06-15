@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.farmacox.farmacode.data.dao.entity.Medication
 import com.farmacox.farmacode.data.dao.entity.ScanHistory
+import com.farmacox.farmacode.data.network.RetrofitClient
 import com.farmacox.farmacode.repository.MedicationRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -67,9 +68,29 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
         viewModelScope.launch {
             if (query.isBlank()) {
                 loadMedications()
-            } else {
-                repository.searchMedications(query).collectLatest { medications ->
+            } else if (query.length >= 2) {
+                try {
+                    val dtos = RetrofitClient.busquedaService.buscarMedicamentos(query)
+                    val medications = dtos.map { dto ->
+                        Medication(
+                            id = dto.id.toString(),
+                            nombre = dto.nombre,
+                            principioActivo = dto.principioActivo ?: "",
+                            dosis = dto.dosis ?: "",
+                            presentacion = dto.presentacion ?: "",
+                            laboratorio = dto.laboratorio ?: "",
+                            paisOrigen = dto.paisOrigen ?: "",
+                            tipo = dto.tipo ?: "",
+                            categoriaTerapeutica = dto.categoriaTerapeutica ?: "",
+                            certificacionISP = dto.certificacionISP ?: false,
+                            descripcion = dto.descripcion ?: ""
+                        )
+                    }
                     _uiState.value = _uiState.value.copy(medications = medications)
+                } catch (e: Exception) {
+                    repository.searchMedications(query).collectLatest { medications ->
+                        _uiState.value = _uiState.value.copy(medications = medications)
+                    }
                 }
             }
         }

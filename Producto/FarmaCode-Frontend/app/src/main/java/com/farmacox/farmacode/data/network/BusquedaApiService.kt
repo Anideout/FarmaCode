@@ -3,9 +3,12 @@ package com.farmacox.farmacode.data.network
 import com.farmacox.farmacode.data.network.dto.BioequivalentesResponse
 import com.farmacox.farmacode.data.network.dto.ChatRequest
 import com.farmacox.farmacode.data.network.dto.ChatResponse
+import com.farmacox.farmacode.data.network.dto.MedicamentoDto
 import com.farmacox.farmacode.data.network.dto.OcrRequest
 import retrofit2.http.Body
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface BusquedaApiService {
 
@@ -14,4 +17,7 @@ interface BusquedaApiService {
 
     @POST("api/chat")
     suspend fun chat(@Body request: ChatRequest): ChatResponse
+
+    @GET("api/medicamentos/buscar")
+    suspend fun buscarMedicamentos(@Query("nombre") nombre: String): List<MedicamentoDto>
 }
