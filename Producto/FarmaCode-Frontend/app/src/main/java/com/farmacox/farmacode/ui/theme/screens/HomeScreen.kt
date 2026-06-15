@@ -237,14 +237,42 @@ fun HomeScreen(
                         )
                         Spacer(Modifier.width(6.dp))
                         Text(
-                            text = if (isEnglish) "Recently Scanned" else "Últimos escaneados",
+                            text = if (isEnglish) "Recent History" else "Historial reciente",
                             fontSize = (fontSize + 1).sp,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 }
-                items(uiState.scanHistory) { scan ->
+                item {
+                    Row(
+                        modifier = Modifier
+                            .padding(start = 16.dp, end = 16.dp, bottom = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val filters = if (isEnglish)
+                            listOf("All" to "Todos", "Scanned" to "Escaneados", "Searched" to "Buscados")
+                        else
+                            listOf("Todos" to "Todos", "Escaneados" to "Escaneados", "Buscados" to "Buscados")
+                        filters.forEach { (label, key) ->
+                            FilterChip(
+                                selected = uiState.historyFilter == key,
+                                onClick = { viewModel.onHistoryFilterChange(key) },
+                                label = { Text(label, fontSize = (fontSize - 3).sp) },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = PrimaryGreen,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            )
+                        }
+                    }
+                }
+                val filteredHistory = when (uiState.historyFilter) {
+                    "Escaneados" -> uiState.scanHistory.filter { it.origen == "ocr" }
+                    "Buscados"   -> uiState.scanHistory.filter { it.origen == "busqueda" }
+                    else         -> uiState.scanHistory
+                }
+                items(filteredHistory) { scan ->
                     ScanHistoryRow(
                         scan = scan,
                         fontSize = fontSize,

@@ -15,7 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-@Database(entities = [Medication::class, User::class, ScanHistory::class], version = 3, exportSchema = false)
+@Database(entities = [Medication::class, User::class, ScanHistory::class], version = 4, exportSchema = false)
 abstract class FarmaCodeDB : RoomDatabase() {
     abstract fun medicationDao(): MedicationDao
     abstract fun userDao(): UserDao

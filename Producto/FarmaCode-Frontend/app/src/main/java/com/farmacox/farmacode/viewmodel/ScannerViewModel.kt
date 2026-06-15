@@ -59,7 +59,7 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                         certificacionISP = true
                     )
                     repository.insertMedication(newMed)
-                    saveHistory(newMed)
+                    saveHistory(newMed, "busqueda")
                     _uiState.value = _uiState.value.copy(
                         foundMedication = newMed,
                         alternatives = emptyList(),
@@ -81,14 +81,14 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                         certificacionISP = true
                     )
                     repository.insertMedication(newMed)
-                    saveHistory(newMed)
+                    saveHistory(newMed, "busqueda")
                     _uiState.value = _uiState.value.copy(foundMedication = newMed, isLoading = false, showResult = true)
                 } else {
                     val medications = repository.searchMedications(cleanCode).first()
                     if (medications.isNotEmpty()) {
                         val medication = medications.first()
                         val alternatives = repository.getAlternatives(medication.principioActivo, medication.id)
-                        saveHistory(medication)
+                        saveHistory(medication, "busqueda")
                         _uiState.value = _uiState.value.copy(
                             foundMedication = medication,
                             alternatives = alternatives,
@@ -154,7 +154,7 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                             descripcion = dto.descripcion ?: ""
                         )
                     }
-                    saveHistory(medications.first())
+                    saveHistory(medications.first(), "ocr")
                     _uiState.value = _uiState.value.copy(
                         foundMedication = medications.first(),
                         alternatives = medications.drop(1),
@@ -185,7 +185,7 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
         }
     }
 
-    private suspend fun saveHistory(medication: Medication) {
+    private suspend fun saveHistory(medication: Medication, origen: String) {
         repository.saveScanHistory(
             ScanHistory(
                 medicationId = medication.id,
@@ -198,7 +198,8 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                 tipo = medication.tipo,
                 categoriaTerapeutica = medication.categoriaTerapeutica,
                 certificacionISP = medication.certificacionISP,
-                descripcion = medication.descripcion
+                descripcion = medication.descripcion,
+                origen = origen
             )
         )
     }

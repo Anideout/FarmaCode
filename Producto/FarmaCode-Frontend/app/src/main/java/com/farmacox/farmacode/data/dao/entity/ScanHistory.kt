@@ -18,5 +18,6 @@ data class ScanHistory(
     val categoriaTerapeutica: String,
     val certificacionISP: Boolean,
     val descripcion: String,
-    val scannedAt: Long = System.currentTimeMillis()
+    val scannedAt: Long = System.currentTimeMillis(),
+    val origen: String = "ocr"  // "ocr" = cámara, "busqueda" = búsqueda manual
 )

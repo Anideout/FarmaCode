@@ -23,7 +23,8 @@ data class HomeUiState(
     val alternatives: List<Medication> = emptyList(),
     val isLoading: Boolean = true,
     val isDarkTheme: Boolean = false,
-    val scanHistory: List<ScanHistory> = emptyList()
+    val scanHistory: List<ScanHistory> = emptyList(),
+    val historyFilter: String = "Todos"
 )
 
 class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
@@ -140,6 +141,10 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
         viewModelScope.launch {
             repository.deleteScanHistory(scan)
         }
+    }
+
+    fun onHistoryFilterChange(filter: String) {
+        _uiState.value = _uiState.value.copy(historyFilter = filter)
     }
 
     fun onDismissDialog() {
