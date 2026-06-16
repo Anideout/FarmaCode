@@ -8,9 +8,9 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://10.172.39.30:8080/"
+    private const val BASE_URL = "http://192.168.1.116:8080/"
 
-    private val httpClient = OkHttpClient.Builder()
+    private val httpClient = OkHttpClient .Builder()
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         })
@@ -26,5 +26,14 @@ object RetrofitClient {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(BusquedaApiService::class.java)
+    }
+
+    val apiService: FarmaCodeApiService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(httpClient)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(FarmaCodeApiService::class.java)
     }
 }

@@ -38,7 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.farmacox.farmacode.data.dao.entity.Medication
+import com.farmacox.farmacode.data.model.Medication
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
 import com.farmacox.farmacode.ui.theme.theme.SuccessGreen
 
