@@ -1,0 +1,580 @@
+{
+  "app": "FarmaCode",
+  "modulo": "Escáner OCR",
+  "generado": "26-06-11",
+  "id_inicio": 24,
+  "resumen": [
+    {
+      "id": "TC-024",
+      "area": "Escáner OCR",
+      "nombre": "OCR con texto suficiente — medicamento encontrado directamente en MySQL",
+      "objetivo": "Verificar que POST /api/busqueda/ocr con texto OCR suficiente, cuyo token coincide con un nombre comercial en MySQL, retorna la lista de bioequivalentes sin llamar a Gemini",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-025",
+      "area": "Escáner OCR",
+      "nombre": "OCR con texto suficiente — medicamento no en BD, Gemini extrae info",
+      "objetivo": "Verificar que cuando el texto OCR es suficiente pero el medicamento no está en MySQL, BusquedaService llama GeminiApiService.extraerInformacionDeOcr() y retorna resultado con datos extraídos por Gemini",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-026",
+      "area": "Escáner OCR",
+      "nombre": "OCR insuficiente (< 15 letras) activa fallback Gemini Vision — valor límite",
+      "objetivo": "Verificar que esOcrInsuficiente() retorna true con texto de menos de 15 letras (letras < 15) y el backend usa GeminiApiService.extraerInformacionDeImagen() con el imagenBase64",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-027",
+      "area": "Escáner OCR",
+      "nombre": "OCR con exactamente 15 letras — NO activa fallback Gemini Vision (valor límite válido)",
+      "objetivo": "Verificar que esOcrInsuficiente() retorna false cuando el texto tiene exactamente 15 letras (límite válido), usando Gemini texto en lugar de Vision",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-028",
+      "area": "Escáner OCR",
+      "nombre": "OCR con ratio letras/longitud < 40% activa fallback Gemini Vision",
+      "objetivo": "Verificar que esOcrInsuficiente() retorna true cuando el ratio de letras sobre la longitud total del texto es menor al 40% (texto muy ruidoso), activando el análisis de imagen",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-029",
+      "area": "Escáner OCR",
+      "nombre": "Respuesta NO_ES_MEDICAMENTO desde el backend",
+      "objetivo": "Verificar que cuando backend retorna principioActivo == 'NO_ES_MEDICAMENTO', ScannerViewModel muestra 'Esto no parece ser un medicamento. Apunta al envase de un medicamento.' y no guarda historial",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-030",
+      "area": "Escáner OCR",
+      "nombre": "Respuesta IMAGEN_ILEGIBLE desde el backend",
+      "objetivo": "Verificar que cuando backend retorna principioActivo == 'IMAGEN_ILEGIBLE', ScannerViewModel muestra 'La imagen no es legible. Intenta con mejor iluminación o enfoca el envase.'",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-031",
+      "area": "Escáner OCR",
+      "nombre": "Escaneo exitoso guarda registro en historial Room (scan_history)",
+      "objetivo": "Verificar que buscarPorTextoOcr() exitoso llama saveHistory() que inserta un ScanHistory en tabla scan_history de Room con todos los campos del medicamento identificado",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-032",
+      "area": "Escáner OCR",
+      "nombre": "Texto OCR con más del 75% de letras en mayúsculas normalizado a Title Case — RN-013",
+      "objetivo": "Verificar que String.toDisplayCase() en ScannerViewModel convierte texto con ratio uppercase > 0.75 a Title Case antes de mostrarlo al usuario",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-033",
+      "area": "Escáner OCR",
+      "nombre": "Backend rechaza petición HTTP sin header X-Api-Key válido",
+      "objetivo": "Verificar que ApiKeyFilter retorna HTTP 401 con body {\"error\":\"Acceso no autorizado\"} cuando el header X-Api-Key está ausente o tiene un valor incorrecto",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-034",
+      "area": "Escáner OCR",
+      "nombre": "API Key hardcodeada en código fuente del APK — FACO-LEG-006",
+      "objetivo": "Verificar que la API Key 'farmacode-secret-2026' está embebida como literal en el APK compilado de RetrofitClient.kt, siendo recuperable por decompilación (FACO-LEG-006)",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-035",
+      "area": "Escáner OCR",
+      "nombre": "Endpoint POST /api/busqueda/foto existe en backend pero no es invocado por el cliente Android",
+      "objetivo": "Verificar que BusquedaController expone POST /api/busqueda/foto pero ningún método en BusquedaApiService.kt del cliente Android lo invoca actualmente",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-036",
+      "area": "Escáner OCR",
+      "nombre": "TipoBusqueda.FOTO no declarado en ENUM MySQL — potencial DataIntegrityViolationException — FACO-LEG-008",
+      "objetivo": "Verificar que al invocar POST /api/busqueda/foto, BusquedaService intenta guardar historial con tipo='FOTO' que no está en el ENUM ('MANUAL','OCR') de schema.sql, causando error de restricción en MySQL",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-037",
+      "area": "Escáner OCR",
+      "nombre": "Timeout de conectividad al backend Railway",
+      "objetivo": "Verificar que ScannerViewModel maneja HttpException o IOException al superar el timeout de OkHttp y muestra un mensaje de error descriptivo al usuario",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-038",
+      "area": "Escáner OCR",
+      "nombre": "Regresión flujo completo escáner OCR",
+      "objetivo": "Verificar el flujo end-to-end: captura de foto con CameraX → OCR con ML Kit → envío a Railway → recepción de resultado → visualización en ModalBottomSheet → registro en historial Room",
+      "prioridad": "Alta",
+      "tipo": "Regresión",
+      "riesgo": "Alto",
+      "origen": "todos"
+    }
+  ],
+  "detalle": [
+    {
+      "id": "TC-024",
+      "area": "Escáner OCR",
+      "nombre": "OCR con texto suficiente — medicamento encontrado directamente en MySQL",
+      "objetivo": "Verificar que POST /api/busqueda/ocr con texto OCR suficiente, cuyo token coincide con un nombre comercial en MySQL, retorna la lista de bioequivalentes sin llamar a Gemini",
+      "precondiciones": [
+        "Backend Railway activo y accesible (farmacode-production-c60c.up.railway.app)",
+        "Medicamento 'Amoxicilina' (o similar) existente en tabla medicamento de MySQL Railway",
+        "Dispositivo Android con permiso CAMERA concedido",
+        "Usuario autenticado, conectividad a internet activa"
+      ],
+      "pasos": [
+        "1. Navegar a la ruta 'scanner' (Pantalla de Fotografiar Envase)",
+        "2. Apuntar la cámara a un envase de medicamento conocido (ej: Amoxicilina 500mg)",
+        "3. Pulsar el botón de captura de foto",
+        "4. Observar que ML Kit TextRecognition extrae el texto del envase on-device",
+        "5. Verificar en logcat (tag OkHttp) que se realiza POST https://farmacode-production-c60c.up.railway.app/api/busqueda/ocr con textoOcr y imagenBase64",
+        "6. Verificar que aparece el ModalBottomSheet con el medicamento identificado y su lista de bioequivalentes",
+        "7. Verificar en logcat del backend (Railway logs) que el medicamento fue encontrado en BD sin llamar a Gemini"
+      ],
+      "datos_prueba": "Envase real de medicamento con nombre visible. Conectividad al backend Railway.",
+      "resultado_esperado": "ModalBottomSheet muestra el medicamento identificado con su principio activo y lista de bioequivalentes. Backend log: 'Medicamento encontrado en BD por OCR'.",
+      "criterio_aprobacion": "PASA si el medicamento se identifica correctamente y los bioequivalentes se listan. FALLA si no abre el modal o muestra error de identificación.",
+      "objetos_bd_involucrados": ["MySQL Railway: tabla medicamento", "MySQL Railway: tabla principio_activo", "MySQL Railway: tabla historial_busqueda", "Room SQLite: tabla scan_history"],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr"],
+      "notas_tecnicas": "RetrofitClient: timeouts connect 30s, read 60s, write 30s. Header X-Api-Key: farmacode-secret-2026 (hardcodeado — FACO-LEG-006). La imagen se comprime a máx 1024px JPEG 75% antes del envío base64.",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-025",
+      "area": "Escáner OCR",
+      "nombre": "OCR con texto suficiente — medicamento no en BD, Gemini extrae info",
+      "objetivo": "Verificar que cuando el texto OCR es suficiente pero el medicamento no está en MySQL, BusquedaService llama GeminiApiService.extraerInformacionDeOcr() y retorna resultado con datos extraídos por Gemini",
+      "precondiciones": [
+        "Backend Railway y Gemini API activos",
+        "Medicamento de prueba cuyo nombre comercial NO existe en tabla medicamento de MySQL",
+        "Usuario autenticado con conectividad a internet"
+      ],
+      "pasos": [
+        "1. Escanear un medicamento que no esté en la BD de Railway (ej: marca importada genérica)",
+        "2. Verificar en logcat del backend que se registra 'Medicamento [nombre] no encontrado en BD, consultando Gemini...'",
+        "3. Verificar en logcat que GeminiApiService.extraerInformacionDeOcr() es invocado",
+        "4. Verificar que el ModalBottomSheet muestra los datos extraídos por Gemini (nombreComercial, principioActivo, dosis, laboratorio, descripcion)",
+        "5. Verificar que el placeholder tiene id=0 en la respuesta (medicamento no en BD)"
+      ],
+      "datos_prueba": "Envase de medicamento genérico importado no presente en BD MySQL Railway",
+      "resultado_esperado": "ModalBottomSheet muestra información del medicamento extraída por Gemini. El campo id=0 indica placeholder. principioActivo != 'N/D'.",
+      "criterio_aprobacion": "PASA si Gemini extrae y muestra información útil del medicamento. FALLA si el resultado es vacío o muestra error no relacionado con un medicamento no reconocible.",
+      "objetos_bd_involucrados": ["MySQL Railway: tabla medicamento", "MySQL Railway: tabla historial_busqueda"],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr", "POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"],
+      "notas_tecnicas": "BusquedaService.buscarPorOcr() — Paso 2: GeminiApiService.extraerInformacionDeOcr(textoOcr) invocado cuando el medicamento no se encuentra por tokens en MySQL. thinkingBudget: 0 en generationConfig.",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-026",
+      "area": "Escáner OCR",
+      "nombre": "OCR insuficiente (< 15 letras) activa fallback Gemini Vision — valor límite",
+      "objetivo": "Verificar que esOcrInsuficiente() retorna true con texto de menos de 15 letras (letras < 15) y el backend usa GeminiApiService.extraerInformacionDeImagen() con el imagenBase64",
+      "precondiciones": [
+        "Backend Railway y Gemini API activos",
+        "Capacidad de inyectar/simular un texto OCR con < 15 letras (ej: via Postman o test unitario)"
+      ],
+      "pasos": [
+        "1. Invocar POST /api/busqueda/ocr via Postman con body: {\"textoOcr\": \"AB123 CD\", \"imagenBase64\": \"<imagen válida en base64>\"}",
+        "   — El texto 'AB123 CD' tiene 4 letras (< 15), ratio de letras 4/8 = 50% (pasa), pero letras < 15 → insuficiente",
+        "2. Verificar en logs del backend que se registra 'OCR insuficiente, usando Gemini Vision...'",
+        "3. Verificar que GeminiApiService.extraerInformacionDeImagen(imagenBase64) es invocado (no extraerInformacionDeOcr)",
+        "4. Verificar la respuesta de la API"
+      ],
+      "datos_prueba": "textoOcr: 'AB123 CD' (4 letras totales, bien por debajo del umbral de 15) / imagenBase64: imagen de envase de medicamento codificada en base64",
+      "resultado_esperado": "Backend log muestra 'OCR insuficiente, usando Gemini Vision...'. Se invoca extraerInformacionDeImagen() con el base64. Respuesta con datos extraídos de la imagen.",
+      "criterio_aprobacion": "PASA si con texto de < 15 letras se activa el análisis de imagen (Vision). FALLA si se usa el análisis de texto OCR en lugar de Vision.",
+      "objetos_bd_involucrados": ["MySQL Railway: tabla historial_busqueda"],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr", "POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"],
+      "notas_tecnicas": "esOcrInsuficiente(): (1) null o blank → true, (2) letras < 15 → true, (3) ratio letras/longitud < 0.40 → true, (4) palabras >= 4 chars < 2 → true. Este caso valida la condición (2). Ver TC-027 para el valor límite exacto.",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-027",
+      "area": "Escáner OCR",
+      "nombre": "OCR con exactamente 15 letras — NO activa fallback Gemini Vision (valor límite válido)",
+      "objetivo": "Verificar que esOcrInsuficiente() retorna false cuando el texto tiene exactamente 15 letras, ratio >= 40% y 2+ palabras válidas, usando Gemini texto (no Vision)",
+      "precondiciones": [
+        "Backend Railway y Gemini API activos",
+        "Capacidad de inyectar texto OCR exactamente con 15 letras vía Postman"
+      ],
+      "pasos": [
+        "1. Construir un texto con exactamente 15 letras, ratio >= 40% y 2+ palabras de >= 4 letras",
+        "   — Ejemplo: 'Amoxil 500 mg ok' (letras: Amoxil=6, mg=2, ok=2 → incompleto... usar 'Ciproflox tabla' = 9+5=14... 'Levocetiriz 10' = 11... 'Amoxicilina 500' = 11... 'Azitromicin 500' = 11...",
+        "   — Usar: 'Ciprofloxacino 5' tiene C-i-p-r-o-f-l-o-x-a-c-i-n-o=14 letras. Cambiar a 'Ciprofloxacinos' = 15 letras exactas, ratio = 15/15 = 100%, 1 palabra >= 4 → aún insuficiente por condición (4).",
+        "   — Usar: 'Amoxicilina oral' = 15 letras (A-m-o-x-i-c-i-l-i-n-a=11 + o-r-a-l=4 = 15), ratio 15/16 > 40%, palabras >= 4 chars: 'Amoxicilina'(11) + 'oral'(4) = 2 palabras válidas → suficiente",
+        "2. Invocar POST /api/busqueda/ocr con textoOcr = 'Amoxicilina oral' y un imagenBase64 válido",
+        "3. Verificar en logs del backend que NO se registra 'OCR insuficiente'",
+        "4. Verificar que se invoca GeminiApiService.extraerInformacionDeOcr() (no Vision)"
+      ],
+      "datos_prueba": "textoOcr: 'Amoxicilina oral' (15 letras exactas, 2 palabras válidas >= 4 chars, ratio > 40%)",
+      "resultado_esperado": "Backend log muestra 'OCR suficiente, usando Gemini texto...'. Se invoca extraerInformacionDeOcr() en lugar de extraerInformacionDeImagen().",
+      "criterio_aprobacion": "PASA si con 15 letras exactas y condiciones suficientes NO se activa Vision. FALLA si se invoca Vision con 15 letras exactas.",
+      "objetos_bd_involucrados": ["MySQL Railway: tabla historial_busqueda"],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr"],
+      "notas_tecnicas": "Caso límite complementario de TC-026. El umbral es letras < 15 (strict), por lo que exactamente 15 letras pasa la condición (2). Las cuatro condiciones de esOcrInsuficiente() se evalúan con OR — todas deben ser false para texto suficiente.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-028",
+      "area": "Escáner OCR",
+      "nombre": "OCR con ratio letras/longitud < 40% activa fallback Gemini Vision",
+      "objetivo": "Verificar que esOcrInsuficiente() retorna true cuando el ratio de letras sobre la longitud total del texto es menor al 40% (texto muy ruidoso), activando el análisis de imagen",
+      "precondiciones": [
+        "Backend Railway y Gemini API activos",
+        "Capacidad de inyectar texto OCR ruidoso vía Postman"
+      ],
+      "pasos": [
+        "1. Invocar POST /api/busqueda/ocr con textoOcr ruidoso: body {\"textoOcr\": \"1234567 89012345 ABCD\", \"imagenBase64\": \"<imagen en base64>\"}",
+        "   — '1234567 89012345 ABCD': letras = 4 (ABCD), longitud = 20, ratio = 4/20 = 20% < 40%",
+        "2. Verificar en logs del backend 'OCR insuficiente, usando Gemini Vision...'",
+        "3. Verificar que se invoca extraerInformacionDeImagen()"
+      ],
+      "datos_prueba": "textoOcr: '1234567 89012345 ABCD' (ratio letras 20% < umbral 40%) / imagenBase64: imagen válida de medicamento",
+      "resultado_esperado": "Fallback a Gemini Vision activado por ratio bajo de letras.",
+      "criterio_aprobacion": "PASA si con ratio < 40% se activa Vision. FALLA si se intenta analizar el texto ruidoso directamente.",
+      "objetos_bd_involucrados": ["MySQL Railway: tabla historial_busqueda"],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr"],
+      "notas_tecnicas": "esOcrInsuficiente() condición (3): ratio = letras / textoOcr.trim().length() < 0.40. Típico en fotos de envases con mucho texto numérico (lotes, fechas de vencimiento, códigos de barras).",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-029",
+      "area": "Escáner OCR",
+      "nombre": "Respuesta NO_ES_MEDICAMENTO desde el backend",
+      "objetivo": "Verificar que cuando backend retorna principioActivo == 'NO_ES_MEDICAMENTO', ScannerViewModel muestra 'Esto no parece ser un medicamento. Apunta al envase de un medicamento.' y no guarda historial en Room",
+      "precondiciones": [
+        "Backend Railway activo",
+        "Objeto no farmacéutico disponible para fotografiar (ej: botella de agua, caja de cereal)"
+      ],
+      "pasos": [
+        "1. Navegar a la ruta 'scanner'",
+        "2. Fotografiar un objeto que no sea un medicamento (ej: botella de agua)",
+        "3. Esperar respuesta del backend",
+        "4. Verificar que aparece el mensaje de error 'Esto no parece ser un medicamento. Apunta al envase de un medicamento.'",
+        "5. Verificar que NO se abre el ModalBottomSheet de resultados",
+        "6. Verificar que NO se insertó un registro en scan_history de Room"
+      ],
+      "datos_prueba": "Foto de objeto no farmacéutico / Simulación vía Postman: body con imagen de objeto no farmacéutico",
+      "resultado_esperado": "Mensaje de error específico visible. Sin apertura de ModalBottomSheet. Sin registro nuevo en scan_history.",
+      "criterio_aprobacion": "PASA si el mensaje 'no parece ser un medicamento' aparece y no hay registro en historial. FALLA si abre el modal o guarda historial.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla scan_history"],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr"],
+      "notas_tecnicas": "ScannerViewModel líneas 127-133: if (response.principioActivo == 'NO_ES_MEDICAMENTO') → setea errorMessage y return. No llama saveHistory(). Backend: BusquedaService retorna BioequivalentesResponseDTO('NO_ES_MEDICAMENTO', null, List.of()).",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-030",
+      "area": "Escáner OCR",
+      "nombre": "Respuesta IMAGEN_ILEGIBLE desde el backend",
+      "objetivo": "Verificar que cuando backend retorna principioActivo == 'IMAGEN_ILEGIBLE', ScannerViewModel muestra 'La imagen no es legible. Intenta con mejor iluminación o enfoca el envase.'",
+      "precondiciones": [
+        "Backend Railway activo",
+        "Capacidad de capturar una imagen muy oscura o borrosa que Gemini no pueda analizar"
+      ],
+      "pasos": [
+        "1. Navegar a la ruta 'scanner'",
+        "2. Fotografiar en condiciones de muy baja iluminación o con el lente tapado parcialmente",
+        "3. Esperar respuesta del backend",
+        "4. Verificar que aparece el mensaje 'La imagen no es legible. Intenta con mejor iluminación o enfoca el envase.'",
+        "5. Verificar que NO se abre el ModalBottomSheet"
+      ],
+      "datos_prueba": "Imagen extremadamente oscura o borrosa donde Gemini retorna nombreComercial='N/D' y principioActivo='N/D'",
+      "resultado_esperado": "Mensaje de imagen ilegible visible. ModalBottomSheet no abierto.",
+      "criterio_aprobacion": "PASA si el mensaje aparece correctamente para imagen ilegible. FALLA si no muestra error o intenta mostrar un resultado vacío.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr"],
+      "notas_tecnicas": "BusquedaService: if (info.nombreComercial().equals('N/D') && info.principioActivo().equals('N/D')) → retorna IMAGEN_ILEGIBLE. ScannerViewModel líneas 134-140: errorMessage = 'La imagen no es legible...'.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-031",
+      "area": "Escáner OCR",
+      "nombre": "Escaneo exitoso guarda registro en historial Room (scan_history)",
+      "objetivo": "Verificar que buscarPorTextoOcr() exitoso llama saveHistory() que inserta un ScanHistory en tabla scan_history de Room con todos los campos del medicamento y el timestamp de escaneo",
+      "precondiciones": [
+        "Usuario autenticado, conectividad a internet, backend Railway activo",
+        "Envase de medicamento conocido disponible para escanear"
+      ],
+      "pasos": [
+        "1. Anotar el número de registros actual en scan_history: adb shell sqlite3 ... 'SELECT COUNT(*) FROM scan_history;'",
+        "2. Navegar a 'scanner' y escanear un medicamento exitosamente",
+        "3. Verificar que el ModalBottomSheet se abre con el resultado",
+        "4. Navegar a 'home' y verificar que el medicamento aparece en la sección de historial de escaneos",
+        "5. Verificar en Room que el count de scan_history aumentó en 1",
+        "6. Verificar los campos: SELECT nombre, principioActivo, scannedAt FROM scan_history ORDER BY scannedAt DESC LIMIT 1"
+      ],
+      "datos_prueba": "Envase de medicamento real para escanear",
+      "resultado_esperado": "Nuevo registro en scan_history con nombre, principioActivo, dosis, presentacion, laboratorio, paisOrigen, tipo, categoriaTerapeutica, certificacionISP, descripcion y scannedAt (timestamp del escaneo). Máximo 10 registros (LIMIT 10 en ScanHistoryDao).",
+      "criterio_aprobacion": "PASA si el registro aparece en scan_history y en la UI de Home. FALLA si no se guarda historial tras escaneo exitoso.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla scan_history"],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr"],
+      "notas_tecnicas": "ScannerViewModel.saveHistory() construye ScanHistory con 12 campos. ScanHistoryDao.getRecentScans(): SELECT * FROM scan_history ORDER BY scannedAt DESC LIMIT 10 — el Flow actualiza Home reactivamente.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-032",
+      "area": "Escáner OCR",
+      "nombre": "Texto OCR con más del 75% de letras en mayúsculas normalizado a Title Case — RN-013",
+      "objetivo": "Verificar que String.toDisplayCase() en ScannerViewModel convierte texto con ratio uppercase > 0.75 a Title Case, y que texto con ratio <= 0.75 se deja sin modificar",
+      "precondiciones": [
+        "Backend Railway activo o capacidad de mockear respuesta",
+        "Medicamento cuyo nombre venga en MAYÚSCULAS del backend (ej: nombre='AZITROMICINA DIHIDRATO')"
+      ],
+      "pasos": [
+        "1. Escanear un medicamento cuya respuesta del backend tenga nombre en MAYÚSCULAS",
+        "2. Verificar en el ModalBottomSheet que el nombre se muestra en Title Case (ej: 'Azitromicina Dihidrato' en lugar de 'AZITROMICINA DIHIDRATO')",
+        "3. Escanear un medicamento con nombre en minúsculas/mixto (ej: 'Paracetamol 500mg')",
+        "4. Verificar que el nombre NO es modificado (ratio uppercase <= 0.75)"
+      ],
+      "datos_prueba": "Caso A (convierte): nombre='AZITROMICINA DIHIDRATO' (100% mayúsculas) / Caso B (no convierte): nombre='Paracetamol 500mg' (~10% mayúsculas)",
+      "resultado_esperado": "Caso A: ModalBottomSheet muestra 'Azitromicina Dihidrato'. Caso B: ModalBottomSheet muestra 'Paracetamol 500mg' sin cambios.",
+      "criterio_aprobacion": "PASA si texto con > 75% mayúsculas aparece en Title Case. FALLA si texto en MAYÚSCULAS se muestra tal cual o si texto normal es modificado.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr"],
+      "notas_tecnicas": "ScannerViewModel.toDisplayCase(): cuenta letras uppercase; si count/total > 0.75 → split(' ').joinToString(' ') { w → w.lowercase().replaceFirstChar { uppercase } }. Se aplica a nombre, principioActivo y laboratorio del resultado.",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-033",
+      "area": "Escáner OCR",
+      "nombre": "Backend rechaza petición HTTP sin header X-Api-Key válido",
+      "objetivo": "Verificar que ApiKeyFilter retorna HTTP 401 con body {\"error\":\"Acceso no autorizado\"} cuando el header X-Api-Key está ausente o tiene un valor incorrecto",
+      "precondiciones": [
+        "Backend Railway activo",
+        "Variable de entorno APP_API_KEY configurada en Railway (no vacía)",
+        "Cliente HTTP (Postman, curl) disponible"
+      ],
+      "pasos": [
+        "1. Enviar POST https://farmacode-production-c60c.up.railway.app/api/busqueda/ocr SIN el header X-Api-Key",
+        "   Body: {\"textoOcr\": \"Amoxicilina\", \"imagenBase64\": null}",
+        "2. Verificar que la respuesta es HTTP 401",
+        "3. Verificar que el body de respuesta es {\"error\":\"Acceso no autorizado\"}",
+        "4. Enviar la misma petición con header X-Api-Key: valor-incorrecto",
+        "5. Verificar nuevamente HTTP 401",
+        "6. Enviar con X-Api-Key: farmacode-secret-2026 — verificar HTTP 200"
+      ],
+      "datos_prueba": "Sin header / X-Api-Key: valor-incorrecto / X-Api-Key: farmacode-secret-2026",
+      "resultado_esperado": "Sin header → HTTP 401. Header incorrecto → HTTP 401. Header correcto → HTTP 200 (respuesta válida).",
+      "criterio_aprobacion": "PASA si los primeros dos casos retornan 401 y el tercero 200. FALLA si alguna petición sin clave válida accede al endpoint.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr"],
+      "notas_tecnicas": "ApiKeyFilter: excluye /swagger-ui/**, /api-docs/**, y /. Si APP_API_KEY está vacío, todas las peticiones pasan (modo desarrollo). En Railway, APP_API_KEY debe estar configurada. La clave correcta está hardcodeada en RetrofitClient.kt: 'farmacode-secret-2026' (FACO-LEG-006).",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-034",
+      "area": "Escáner OCR",
+      "nombre": "API Key hardcodeada en código fuente del APK — FACO-LEG-006",
+      "objetivo": "Verificar que la API Key 'farmacode-secret-2026' está embebida como literal en el APK compilado de RetrofitClient.kt, siendo recuperable mediante decompilación del APK (FACO-LEG-006)",
+      "precondiciones": [
+        "APK de FarmaCode compilado en modo release o debug",
+        "Herramienta de decompilación disponible: apktool + dex2jar, o jadx-gui"
+      ],
+      "pasos": [
+        "1. Obtener el archivo APK: adb shell pm path com.farmacox.farmacode → adb pull /data/app/.../base.apk",
+        "2. Decompilar el APK con jadx: jadx -d output/ farmacode.apk",
+        "3. Buscar la constante API_KEY: grep -r 'farmacode-secret' output/",
+        "4. Verificar que el literal 'farmacode-secret-2026' aparece en el código decompilado (equivalente a RetrofitClient.kt)"
+      ],
+      "datos_prueba": "APK compilado de FarmaCode",
+      "resultado_esperado": "Comportamiento correcto (post-corrección): la cadena 'farmacode-secret-2026' NO aparece en el APK decompilado (clave en BuildConfig cifrado o local.properties). Estado actual: la clave es encontrada en texto plano (FACO-LEG-006 confirmada).",
+      "criterio_aprobacion": "PASA si la clave NO está en texto plano en el APK (corrección aplicada). FALLA si 'farmacode-secret-2026' es recuperable del APK decompilado.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "FACO-LEG-006: RetrofitClient.kt línea 13: private const val API_KEY = 'farmacode-secret-2026'. Corrección: mover a local.properties + BuildConfig, usar cifrado en reposo, y rotar la clave si el APK ya fue distribuido públicamente.",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-035",
+      "area": "Escáner OCR",
+      "nombre": "Endpoint POST /api/busqueda/foto existe en backend pero no es invocado por el cliente Android",
+      "objetivo": "Verificar que BusquedaController expone POST /api/busqueda/foto pero ningún método en BusquedaApiService.kt del cliente Android lo invoca actualmente",
+      "precondiciones": [
+        "Backend Railway activo",
+        "Acceso al código fuente del cliente Android (BusquedaApiService.kt, RetrofitClient.kt)"
+      ],
+      "pasos": [
+        "1. Revisar BusquedaApiService.kt — verificar que NO contiene ninguna función para /api/busqueda/foto",
+        "2. Buscar en todo el código fuente Android: grep -r 'busqueda/foto' Producto/FarmaCode-Frontend/",
+        "3. Verificar que no hay invocaciones",
+        "4. Invocar directamente el endpoint vía Postman: POST /api/busqueda/foto con X-Api-Key y body {\"imagenBase64\": \"<base64 imagen>\"}",
+        "5. Verificar que el backend responde (el endpoint existe y es funcional)"
+      ],
+      "datos_prueba": "Código fuente del cliente Android / Imagen base64 válida para Postman",
+      "resultado_esperado": "grep retorna 0 resultados en el código Android. El endpoint responde desde Postman con HTTP 200 (funcional en backend). El cliente Android no lo invoca.",
+      "criterio_aprobacion": "PASA si el endpoint existe en el backend Y no es invocado por el cliente Android (ambas condiciones). FALLA si alguna parte del cliente Android lo invoca.",
+      "objetos_bd_involucrados": ["MySQL Railway: tabla historial_busqueda"],
+      "endpoints_involucrados": ["POST /api/busqueda/foto"],
+      "notas_tecnicas": "BusquedaController.buscarPorFoto() usa TipoBusqueda.FOTO — relacionado con FACO-LEG-008. FotoRequestDTO tiene campo imagenBase64. El cliente Android solo expone buscarPorOcr(OcrRequest) en BusquedaApiService.kt.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-036",
+      "area": "Escáner OCR",
+      "nombre": "TipoBusqueda.FOTO no declarado en ENUM MySQL — potencial DataIntegrityViolationException — FACO-LEG-008",
+      "objetivo": "Verificar que al invocar POST /api/busqueda/foto, BusquedaService intenta guardar historial con tipo='FOTO' que no está en el ENUM ('MANUAL','OCR') de schema.sql, causando error de restricción en MySQL (FACO-LEG-008)",
+      "precondiciones": [
+        "Backend Railway activo conectado a MySQL Railway",
+        "tabla historial_busqueda con ENUM tipo_busqueda('MANUAL','OCR') vigente en MySQL",
+        "Cliente HTTP con X-Api-Key configurado"
+      ],
+      "pasos": [
+        "1. Invocar POST https://farmacode-production-c60c.up.railway.app/api/busqueda/foto",
+        "   Headers: X-Api-Key: farmacode-secret-2026, Content-Type: application/json",
+        "   Body: {\"imagenBase64\": \"<imagen de medicamento en base64>\"}",
+        "2. Observar la respuesta HTTP (HTTP 500 esperado si el ENUM no incluye 'FOTO')",
+        "3. Revisar los logs de Railway para DataIntegrityViolationException o similar",
+        "4. Verificar en MySQL: SELECT tipo_busqueda FROM historial_busqueda ORDER BY id DESC LIMIT 3 — confirmar que no se insertó registro con tipo='FOTO'"
+      ],
+      "datos_prueba": "Imagen base64 de medicamento válido para Postman / X-Api-Key: farmacode-secret-2026",
+      "resultado_esperado": "HTTP 500 con DataIntegrityViolationException o similar si el ENUM no incluye 'FOTO'. El endpoint debería retornar error hasta que se añada 'FOTO' al ENUM en schema.sql (FACO-LEG-008 confirmada).",
+      "criterio_aprobacion": "PASA si el endpoint funciona correctamente y 'FOTO' está en el ENUM (corrección aplicada). FALLA si retorna HTTP 500 por restricción ENUM (FACO-LEG-008 confirmada).",
+      "objetos_bd_involucrados": ["MySQL Railway: tabla historial_busqueda"],
+      "endpoints_involucrados": ["POST /api/busqueda/foto"],
+      "notas_tecnicas": "FACO-LEG-008: schema.sql define ENUM('MANUAL','OCR') pero TipoBusqueda.java incluye FOTO. BusquedaService.buscarPorFoto() llama guardarHistorial('...', TipoBusqueda.FOTO, ...). Corrección: añadir 'FOTO' al ENUM en schema.sql y en migrations de MySQL.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-037",
+      "area": "Escáner OCR",
+      "nombre": "Timeout de conectividad al backend Railway",
+      "objetivo": "Verificar que ScannerViewModel maneja HttpException o IOException al superar el connect timeout de OkHttp (30s) y muestra un mensaje de error descriptivo al usuario",
+      "precondiciones": [
+        "Dispositivo Android con conectividad de red (para activar el escaneo) pero con el backend Railway no accesible o muy lento"
+      ],
+      "pasos": [
+        "1. Desactivar la conectividad de red del dispositivo (modo avión) o configurar proxy que bloquee Railway",
+        "2. Navegar a la ruta 'scanner' y capturar una foto de un medicamento",
+        "3. Esperar que ML Kit procese el OCR (funciona offline)",
+        "4. Observar que la app intenta conectar al backend y esperar hasta el timeout (30s connect o 60s read)",
+        "5. Verificar que aparece un mensaje de error en la UI (texto descriptivo del error de conexión)"
+      ],
+      "datos_prueba": "Red desconectada o backend inaccesible. Envase de medicamento para fotografiar.",
+      "resultado_esperado": "Después del timeout, un mensaje de error aparece en la UI (ej: 'Error: Unable to resolve host' o similar). isLoading vuelve a false. Sin crash de la app.",
+      "criterio_aprobacion": "PASA si la app muestra un error descriptivo tras el timeout y no crashea. FALLA si la app queda en estado de carga infinita o crashea.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr"],
+      "notas_tecnicas": "ScannerViewModel.buscarPorTextoOcr(): catch (e: HttpException) → extrae errorMsg del body. catch (e: Exception) → errorMessage = 'Error: ${e.message}'. OkHttp: connectTimeout 30s, readTimeout 60s. La app puede tomar hasta 60s en mostrar el error si el servidor acepta la conexión pero no responde.",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-038",
+      "area": "Escáner OCR",
+      "nombre": "Regresión flujo completo escáner OCR",
+      "objetivo": "Verificar el flujo end-to-end: captura de foto con CameraX → OCR con ML Kit on-device → envío a Railway (POST /api/busqueda/ocr) → recepción de resultado → visualización en ModalBottomSheet → registro guardado en scan_history de Room",
+      "precondiciones": [
+        "Usuario autenticado, conectividad a internet, backend Railway y Gemini API activos",
+        "Permiso CAMERA concedido en el dispositivo",
+        "Envase de medicamento físico disponible para escanear"
+      ],
+      "pasos": [
+        "1. Navegar a la ruta 'scanner'",
+        "2. Verificar que se muestra el preview de la cámara trasera en tiempo real",
+        "3. Apuntar la cámara al envase del medicamento con buena iluminación",
+        "4. Pulsar el botón de captura — verificar indicador de carga",
+        "5. Esperar la respuesta del backend (máx 60s por read timeout)",
+        "6. Verificar que el ModalBottomSheet se abre con el nombre, principio activo, dosis, laboratorio y descripción",
+        "7. Cerrar el ModalBottomSheet",
+        "8. Navegar a 'home' — verificar que el medicamento escaneado aparece en la sección de historial",
+        "9. Verificar que el registro existe en scan_history de Room"
+      ],
+      "datos_prueba": "Envase real de medicamento. Iluminación adecuada.",
+      "resultado_esperado": "Flujo completo exitoso sin errores. Medicamento identificado. ModalBottomSheet con datos. Historial actualizado en Home y en Room.",
+      "criterio_aprobacion": "PASA si todos los pasos se completan correctamente. FALLA si cualquier paso del flujo produce un error o el medicamento no es identificado.",
+      "objetos_bd_involucrados": ["MySQL Railway: tabla medicamento", "MySQL Railway: tabla historial_busqueda", "Room SQLite: tabla scan_history"],
+      "endpoints_involucrados": ["POST /api/busqueda/ocr"],
+      "notas_tecnicas": "Flujo completo: CameraX ImageCapture → ImageProxy.toBitmap() → ML Kit TextRecognition → buscarPorTextoOcr(texto, base64) → RetrofitClient POST → BusquedaService → Gemini (si aplica) → ScannerViewModel.saveHistory() → Room. Verificar también que toDisplayCase() normaliza correctamente los campos en mayúsculas.",
+      "prioridad": "Alta",
+      "tipo": "Regresión",
+      "riesgo": "Alto",
+      "origen": "todos"
+    }
+  ]
+}

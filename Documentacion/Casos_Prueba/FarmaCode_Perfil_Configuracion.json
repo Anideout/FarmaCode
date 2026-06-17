@@ -1,0 +1,353 @@
+{
+  "app": "FarmaCode",
+  "modulo": "Perfil y Configuración",
+  "generado": "26-06-11",
+  "id_inicio": 52,
+  "resumen": [
+    {
+      "id": "TC-052",
+      "area": "Perfil y Configuración",
+      "nombre": "Datos del perfil coinciden con el usuario logueado",
+      "objetivo": "Verificar que ProfileViewModel.loadUserData() obtiene el email de UserSession, consulta Room (tabla users) y muestra el nombre y email del usuario autenticado en la pantalla de Perfil",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-053",
+      "area": "Perfil y Configuración",
+      "nombre": "Toggle de notificaciones cambia estado visual sin efecto funcional real",
+      "objetivo": "Verificar que toggleNotificaciones() actualiza isNotificacionsEnabled en el estado del ViewModel y el switch visual cambia, pero no hay push notifications implementadas",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-054",
+      "area": "Perfil y Configuración",
+      "nombre": "Botón Configuración abre el Diálogo de Ajustes Globales",
+      "objetivo": "Verificar que pulsar el botón Configuración llama toggleSettingsCard() que cambia showSettingsCard = true y el Dialog composable se muestra con título 'Ajustes Globales'",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-055",
+      "area": "Perfil y Configuración",
+      "nombre": "Cambio de tamaño de fuente aplica inmediatamente a toda la app",
+      "objetivo": "Verificar que el botón Aa en el Diálogo de Ajustes llama onFontSizeChange() en MainActivity, cicla el tamaño de fuente (16→20→24→14→16) y el cambio se propaga a todas las pantallas",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-056",
+      "area": "Perfil y Configuración",
+      "nombre": "Cambio de idioma alterna entre Español e English",
+      "objetivo": "Verificar que el botón de idioma en el Diálogo de Ajustes llama onLanguageChange() en MainActivity, alterna language entre 'Español' y 'English', y los textos de la app cambian en consecuencia",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-057",
+      "area": "Perfil y Configuración",
+      "nombre": "Cerrar sesión limpia el backstack completo y no permite navegar atrás — RN-014",
+      "objetivo": "Verificar que el botón Cerrar Sesión invoca navController.navigate('login') { popUpTo(0) { inclusive = true } }, eliminando todas las rutas del backstack, y que el botón Back del sistema no regresa a pantallas autenticadas",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-058",
+      "area": "Perfil y Configuración",
+      "nombre": "Historial backend asociado a userId=1 hardcodeado sin autenticación real — FACO-LEG-004",
+      "objetivo": "Verificar que HistorialController.HARDCODED_USER_ID = 1L asocia todos los registros de historial_busqueda del backend al mismo userId sin discriminar por usuario real autenticado (FACO-LEG-004)",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-059",
+      "area": "Perfil y Configuración",
+      "nombre": "GET /api/historial protegido por ApiKeyFilter — requiere X-Api-Key",
+      "objetivo": "Verificar que el endpoint GET /api/historial rechaza peticiones sin el header X-Api-Key válido retornando HTTP 401",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-060",
+      "area": "Perfil y Configuración",
+      "nombre": "Regresión flujo perfil y configuración",
+      "objetivo": "Verificar el flujo end-to-end: visualización de datos del perfil → apertura del Diálogo de Ajustes → cambio de fuente → cambio de idioma → cierre del diálogo → cerrar sesión, sin errores",
+      "prioridad": "Media",
+      "tipo": "Regresión",
+      "riesgo": "Medio",
+      "origen": "todos"
+    }
+  ],
+  "detalle": [
+    {
+      "id": "TC-052",
+      "area": "Perfil y Configuración",
+      "nombre": "Datos del perfil coinciden con el usuario logueado",
+      "objetivo": "Verificar que ProfileViewModel.loadUserData() obtiene el email de UserSession, consulta Room (tabla users) y muestra el nombre y email del usuario autenticado en la pantalla de Perfil",
+      "precondiciones": [
+        "Usuario autenticado con email 'tester@farmacode.cl' y nombre 'Juan Test' (registrado en Room tabla users)",
+        "UserSession.userEmail == 'tester@farmacode.cl'"
+      ],
+      "pasos": [
+        "1. Iniciar sesión con 'tester@farmacode.cl'",
+        "2. Navegar a la ruta 'profile' (Pantalla de Perfil)",
+        "3. Verificar que el nombre mostrado en pantalla es 'Juan Test'",
+        "4. Verificar que el email mostrado es 'tester@farmacode.cl'",
+        "5. Verificar que el avatar (imagen de perfil) es visible"
+      ],
+      "datos_prueba": "Usuario: nombre='Juan Test', email='tester@farmacode.cl' en Room tabla users",
+      "resultado_esperado": "Pantalla de Perfil muestra nombre 'Juan Test' y email 'tester@farmacode.cl'. Los datos coinciden exactamente con los de Room.",
+      "criterio_aprobacion": "PASA si los datos mostrados coinciden con el usuario logueado en Room. FALLA si los datos están vacíos, son incorrectos, o pertenecen a otro usuario.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla users"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "ProfileViewModel.loadUserData(): lee UserSession.userEmail → userRepository.getUserByEmail(email) → actualiza uiState con user.name y user.email. Si UserSession.userEmail es null, el perfil muestra datos vacíos.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-053",
+      "area": "Perfil y Configuración",
+      "nombre": "Toggle de notificaciones cambia estado visual sin efecto funcional real",
+      "objetivo": "Verificar que toggleNotificaciones() actualiza isNotificacionsEnabled en el estado del ViewModel y el switch visual cambia, pero no hay push notifications implementadas",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'profile'"
+      ],
+      "pasos": [
+        "1. Localizar el switch/toggle de Notificaciones en la pantalla de Perfil",
+        "2. Verificar el estado inicial del toggle (activado/desactivado)",
+        "3. Cambiar el estado del toggle",
+        "4. Verificar que el estado visual del toggle cambia correctamente",
+        "5. Navegar a otra pantalla y volver a Perfil",
+        "6. Verificar que el toggle regresa al estado por defecto (el estado no persiste entre navegaciones)"
+      ],
+      "datos_prueba": "N/A — toggle de estado local en el ViewModel",
+      "resultado_esperado": "El toggle cambia visualmente al pulsarlo. No hay notificaciones push reales. El estado se pierde al navegar fuera (no persiste en Room ni DataStore).",
+      "criterio_aprobacion": "PASA si el toggle cambia visualmente. FALLA si el cambio no se refleja en la UI o la app crashea.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "ProfileViewModel.toggleNotificacions() solo actualiza el estado local del ViewModel (isNotificacionsEnabled). No hay integración con Firebase Cloud Messaging ni similar. Estado volátil — no persiste.",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-054",
+      "area": "Perfil y Configuración",
+      "nombre": "Botón Configuración abre el Diálogo de Ajustes Globales",
+      "objetivo": "Verificar que pulsar el botón Configuración llama toggleSettingsCard() que cambia showSettingsCard = true y el Dialog composable se muestra con título 'Ajustes Globales'",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'profile'"
+      ],
+      "pasos": [
+        "1. Localizar el botón 'Configuración' (o ícono de ajustes) en la pantalla de Perfil",
+        "2. Pulsar el botón",
+        "3. Verificar que aparece el Dialog modal con título 'Ajustes Globales'",
+        "4. Verificar que el Dialog contiene: botón Aa (tamaño de fuente), botón de idioma, y botón 'Guardar y Cerrar'",
+        "5. Pulsar 'Guardar y Cerrar' o pulsar fuera del Dialog",
+        "6. Verificar que el Dialog se cierra y la pantalla de Perfil vuelve a ser visible"
+      ],
+      "datos_prueba": "N/A",
+      "resultado_esperado": "Dialog 'Ajustes Globales' visible con los controles de configuración. Se cierra correctamente al pulsar 'Guardar y Cerrar'.",
+      "criterio_aprobacion": "PASA si el Dialog se abre con título correcto y se cierra adecuadamente. FALLA si no aparece o los controles están ausentes.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "ProfileViewModel.toggleSettingsCard(): alterna showSettingsCard en el estado. El Dialog es un composable de tipo androidx.compose.ui.window.Dialog controlado por uiState.showSettingsCard. No tiene ruta propia (FACO-PERF-002).",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-055",
+      "area": "Perfil y Configuración",
+      "nombre": "Cambio de tamaño de fuente aplica inmediatamente a toda la app",
+      "objetivo": "Verificar que el botón Aa en el Diálogo de Ajustes llama onFontSizeChange() en MainActivity, cicla el tamaño de fuente (16→20→24→14→16) y el cambio se propaga a todas las pantallas activas",
+      "precondiciones": [
+        "Usuario autenticado, Diálogo de Ajustes Globales abierto"
+      ],
+      "pasos": [
+        "1. Abrir el Diálogo de Ajustes Globales desde Perfil",
+        "2. Pulsar el botón Aa una vez — verificar que el tamaño de fuente aumenta (16 → 20)",
+        "3. Cerrar el Dialog y verificar que el texto en la pantalla de Perfil ha aumentado de tamaño",
+        "4. Abrir el Dialog nuevamente y pulsar Aa de nuevo (20 → 24)",
+        "5. Pulsar Aa una vez más (24 → 14 — reinicia al mínimo)",
+        "6. Verificar el ciclo completo: 16 → 20 → 24 → 14 → 16",
+        "7. Navegar a Home y verificar que el tamaño de fuente persiste en esa pantalla"
+      ],
+      "datos_prueba": "Tamaño de fuente inicial: 16f. Incremento: +4f por pulsación. Máximo antes de reiniciar: 24f → siguiente es 14f.",
+      "resultado_esperado": "El tamaño de fuente cambia con cada pulsación de Aa siguiendo el ciclo 16→20→24→14→16. El cambio se aplica a toda la app inmediatamente.",
+      "criterio_aprobacion": "PASA si el ciclo de tamaños es correcto y el cambio afecta a toda la app. FALLA si el tamaño no cambia o solo aplica a una pantalla.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "MainActivity: fontSize estado hoisted con mutableFloatStateOf(16f). onFontSizeChange: fontSize = if (fontSize < 24f) fontSize + 4f else 14f. El estado se pasa como parámetro a MainNavigation. Estado volátil — se pierde al reiniciar la app.",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-056",
+      "area": "Perfil y Configuración",
+      "nombre": "Cambio de idioma alterna entre Español e English",
+      "objetivo": "Verificar que el botón de idioma en el Diálogo de Ajustes llama onLanguageChange() en MainActivity, alterna language entre 'Español' y 'English', y los textos de la app cambian en consecuencia",
+      "precondiciones": [
+        "Usuario autenticado, Diálogo de Ajustes Globales abierto",
+        "Idioma inicial: 'Español'"
+      ],
+      "pasos": [
+        "1. Abrir el Diálogo de Ajustes Globales",
+        "2. Identificar el botón de idioma (debe mostrar el idioma actual: 'Español' o similar)",
+        "3. Pulsar el botón de idioma — verificar que cambia a 'English'",
+        "4. Cerrar el Dialog",
+        "5. Verificar que los textos de la app cambian al inglés (títulos de pantallas, etiquetas, mensajes)",
+        "6. Abrir el Dialog nuevamente y pulsar de nuevo el botón de idioma — verificar que vuelve a 'Español'",
+        "7. Verificar que los textos vuelven al español"
+      ],
+      "datos_prueba": "Idioma inicial: 'Español'. Toggle: 'Español' ↔ 'English'.",
+      "resultado_esperado": "Los textos de la app cambian al idioma seleccionado inmediatamente. El botón del dialog muestra el idioma activo.",
+      "criterio_aprobacion": "PASA si los textos cambian de idioma correctamente en ambas direcciones. FALLA si el idioma no cambia o solo aplica a la pantalla de Perfil.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "MainActivity: language estado hoisted con mutableStateOf('Español'). onLanguageChange: language = if (language == 'Español') 'English' else 'Español'. Se pasa a MainNavigation y de ahí a cada Screen. Los textos condicionados por language == 'English' cambian en runtime (no es internacionalización nativa con strings.xml por idioma).",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-057",
+      "area": "Perfil y Configuración",
+      "nombre": "Cerrar sesión limpia el backstack completo y no permite navegar atrás — RN-014",
+      "objetivo": "Verificar que el botón Cerrar Sesión invoca navController.navigate('login') { popUpTo(0) { inclusive = true } }, eliminando todas las rutas del backstack, y que el botón Back del sistema no regresa a pantallas autenticadas",
+      "precondiciones": [
+        "Usuario autenticado, habiendo navegado por varias pantallas (home → scanner → chat → profile)",
+        "UserSession.userEmail establecido"
+      ],
+      "pasos": [
+        "1. Navegar por al menos 3 pantallas distintas: Home → Scanner → Chat → Profile",
+        "2. En la pantalla de Perfil, pulsar el botón 'Cerrar Sesión'",
+        "3. Verificar que la app navega inmediatamente a la ruta 'login'",
+        "4. Verificar que UserSession.userEmail es null (sesión limpiada)",
+        "5. Pulsar el botón Back del sistema (hardware o gesto de deslizamiento)",
+        "6. Verificar que la app NO navega a ninguna pantalla autenticada (debe salir de la app o permanecer en login)",
+        "7. Intentar navegar directamente a la ruta 'home' vía deep link — verificar que requiere login"
+      ],
+      "datos_prueba": "Usuario autenticado con historial de navegación por múltiples pantallas",
+      "resultado_esperado": "Navegación inmediata a 'login'. Backstack completamente vacío. El botón Back no regresa a pantallas autenticadas. UserSession.userEmail == null.",
+      "criterio_aprobacion": "PASA si después del logout el Back del sistema no permite acceder a pantallas autenticadas. FALLA si al presionar Back se regresa a Home, Scanner, Chat o cualquier pantalla protegida.",
+      "objetos_bd_involucrados": [],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "RN-014: navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } — popUpTo(0) limpia TODA la pila de backstack incluyendo el destino inicial. Esto impide que Back navegue a pantallas autenticadas. UserSession.userEmail debería ser reseteado a null en el logout para evitar que ProfileViewModel cargue datos del usuario anterior.",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-058",
+      "area": "Perfil y Configuración",
+      "nombre": "Historial backend asociado a userId=1 hardcodeado sin autenticación real — FACO-LEG-004",
+      "objetivo": "Verificar que HistorialController.HARDCODED_USER_ID = 1L asocia todos los registros de historial_busqueda del backend al mismo userId=1 sin discriminar por usuario real (FACO-LEG-004)",
+      "precondiciones": [
+        "Backend Railway activo con MySQL conectado",
+        "Al menos 2 usuarios distintos en la app (tester1@farmacode.cl, tester2@farmacode.cl)",
+        "Cliente HTTP (Postman) con X-Api-Key configurado"
+      ],
+      "pasos": [
+        "1. Iniciar sesión como tester1@farmacode.cl y realizar 2 escaneos OCR exitosos",
+        "2. Consultar GET https://farmacode-production-c60c.up.railway.app/api/historial con X-Api-Key — anotar los registros devueltos",
+        "3. Cerrar sesión e iniciar como tester2@farmacode.cl y realizar 2 escaneos OCR adicionales",
+        "4. Consultar nuevamente GET /api/historial — verificar que retorna los registros de AMBOS usuarios (todos con userId=1)",
+        "5. Consultar MySQL directamente: SELECT user_id, termino_busqueda FROM historial_busqueda ORDER BY id DESC LIMIT 10 — verificar que todos tienen user_id=1"
+      ],
+      "datos_prueba": "2 usuarios: tester1@farmacode.cl, tester2@farmacode.cl. 4 escaneos OCR en total.",
+      "resultado_esperado": "Comportamiento correcto (post-corrección): cada registro asociado al userId real del usuario autenticado. Estado actual: todos los registros de historial_busqueda tienen user_id=1 independientemente del usuario que escaneó (FACO-LEG-004 confirmada).",
+      "criterio_aprobacion": "PASA si los registros de tester1 y tester2 tienen user_id diferentes (corrección aplicada). FALLA si todos tienen user_id=1 (FACO-LEG-004 presente).",
+      "objetos_bd_involucrados": ["MySQL Railway: tabla historial_busqueda"],
+      "endpoints_involucrados": ["GET /api/historial"],
+      "notas_tecnicas": "FACO-LEG-004: HistorialController.java — private static final Long HARDCODED_USER_ID = 1L. BusquedaService.guardarHistorial() siempre usa este userId. Corrección: implementar Spring Security + JWT y reemplazar HARDCODED_USER_ID por SecurityContextHolder.getContext().getAuthentication().getName() o similar.",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-059",
+      "area": "Perfil y Configuración",
+      "nombre": "GET /api/historial protegido por ApiKeyFilter — requiere X-Api-Key",
+      "objetivo": "Verificar que el endpoint GET /api/historial rechaza peticiones sin el header X-Api-Key válido retornando HTTP 401, y que con clave válida retorna la lista de historial",
+      "precondiciones": [
+        "Backend Railway activo",
+        "Variable de entorno APP_API_KEY configurada en Railway"
+      ],
+      "pasos": [
+        "1. Enviar GET https://farmacode-production-c60c.up.railway.app/api/historial SIN el header X-Api-Key",
+        "2. Verificar que la respuesta es HTTP 401 con body {\"error\":\"Acceso no autorizado\"}",
+        "3. Enviar con header X-Api-Key: farmacode-secret-2026",
+        "4. Verificar que la respuesta es HTTP 200 con la lista de historial de búsquedas",
+        "5. Repetir el paso 1 con X-Api-Key: clave-incorrecta — verificar HTTP 401"
+      ],
+      "datos_prueba": "Sin header / X-Api-Key: farmacode-secret-2026 / X-Api-Key: clave-incorrecta",
+      "resultado_esperado": "Sin clave o clave incorrecta → HTTP 401. Clave correcta → HTTP 200 con lista de historial.",
+      "criterio_aprobacion": "PASA si sin clave válida retorna 401 y con clave correcta retorna 200. FALLA si el endpoint es accesible sin autenticación.",
+      "objetos_bd_involucrados": ["MySQL Railway: tabla historial_busqueda"],
+      "endpoints_involucrados": ["GET /api/historial"],
+      "notas_tecnicas": "ApiKeyFilter protege todos los endpoints excepto Swagger, /api-docs y /. HistorialController expone GET /api/historial (devuelve historial del userId=1 — FACO-LEG-004) y DELETE /api/historial/{id}. El cliente Android NO invoca estos endpoints — el historial de la app usa Room SQLite.",
+      "prioridad": "Alta",
+      "tipo": "Seguridad",
+      "riesgo": "Alto",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-060",
+      "area": "Perfil y Configuración",
+      "nombre": "Regresión flujo perfil y configuración",
+      "objetivo": "Verificar el flujo end-to-end: visualización de datos del perfil → apertura del Diálogo de Ajustes → cambio de fuente → cambio de idioma → cierre del diálogo → verificación de cambios en otras pantallas → cerrar sesión exitoso",
+      "precondiciones": [
+        "Usuario autenticado con nombre y email en Room",
+        "App iniciada en pantalla 'home'"
+      ],
+      "pasos": [
+        "1. Navegar a 'profile' — verificar nombre y email del usuario",
+        "2. Pulsar botón Configuración — verificar apertura del Diálogo de Ajustes",
+        "3. Pulsar Aa una vez — verificar cambio visual de fuente en el Dialog",
+        "4. Pulsar botón de idioma — verificar que el idioma cambia a English",
+        "5. Pulsar 'Guardar y Cerrar' — verificar cierre del Dialog",
+        "6. Verificar que los textos de la pantalla de Perfil reflejan el idioma English",
+        "7. Navegar a Home — verificar que el tamaño de fuente y el idioma persisten",
+        "8. Volver a Perfil — pulsar Cerrar Sesión",
+        "9. Verificar navegación a 'login' y que Back no regresa a pantallas autenticadas"
+      ],
+      "datos_prueba": "Usuario con email y nombre en Room. Idioma inicial: Español.",
+      "resultado_esperado": "Todos los pasos se completan sin error. Los cambios de fuente e idioma aplican inmediatamente. El logout limpia el backstack correctamente.",
+      "criterio_aprobacion": "PASA si todos los pasos se completan correctamente. FALLA si cualquier paso muestra error o comportamiento inesperado.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla users"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "El estado de fontSize y language son hoisted en MainActivity — persisten mientras el proceso Android esté vivo pero se pierden al reiniciar la app. Verificar que al hacer logout UserSession.userEmail se limpia para evitar que un login posterior cargue datos del usuario anterior.",
+      "prioridad": "Media",
+      "tipo": "Regresión",
+      "riesgo": "Medio",
+      "origen": "todos"
+    }
+  ]
+}

@@ -43,11 +43,9 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
 
         viewModelScope.launch {
             try {
-                // Usamos split con el caracter literal '|'
                 val parts = cleanCode.split('|').map { it.trim() }
-                
+
                 if (parts.size >= 8) {
-                    // Formato extendido: Nombre|Principio|Dosis|Categoria|Presentacion|Laboratorio|Pais|Descripcion
                     val newMed = Medication(
                         id = "QR-${System.currentTimeMillis()}",
                         nombre = parts[0],
@@ -61,7 +59,6 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                         tipo = if (parts.size > 8) parts[8] else "Nuevo",
                         certificacionISP = true
                     )
-                    
                     _uiState.value = _uiState.value.copy(
                         foundMedication = newMed,
                         alternatives = emptyList(),
@@ -69,7 +66,6 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                         showResult = true
                     )
                 } else if (parts.size >= 4) {
-                    // Formato de 4 partes original (mantenemos compatibilidad)
                     val newMed = Medication(
                         id = "QR-${System.currentTimeMillis()}",
                         nombre = parts[0],
@@ -85,11 +81,11 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                     )
                     _uiState.value = _uiState.value.copy(foundMedication = newMed, isLoading = false, showResult = true)
                 } else {
-                    // Búsqueda normal
                     val medications = repository.searchMedications(cleanCode).first()
                     if (medications.isNotEmpty()) {
                         val medication = medications.first()
                         val alternatives = repository.getAlternatives(medication.principioActivo, medication.id)
+                        saveHistory(medication)
                         _uiState.value = _uiState.value.copy(
                             foundMedication = medication,
                             alternatives = alternatives,
@@ -116,8 +112,9 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
         simulateScan(query)
     }
 
-    fun buscarPorTextoOcr(texto: String) {
-        if (_uiState.value.isLoading || texto.isBlank()) return
+    fun buscarPorTextoOcr(texto: String, imagenBase64: String? = null) {
+        val textoVacio = texto.isBlank()
+        if (_uiState.value.isLoading || (textoVacio && imagenBase64 == null)) return
 
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
@@ -127,16 +124,16 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                 val response = withTimeout(15000L) {
                     RetrofitClient.busquedaService.buscarPorOcr(OcrRequest(texto))
                 }
-                
+
                 if (response.medicamentos.isNotEmpty()) {
                     val medications = response.medicamentos.map { dto ->
                         Medication(
                             id = dto.id.toString(),
-                            nombre = dto.nombre,
-                            principioActivo = dto.principioActivo ?: "",
+                            nombre = dto.nombre.toDisplayCase(),
+                            principioActivo = (dto.principioActivo ?: "").toDisplayCase(),
                             dosis = dto.dosis ?: "",
                             presentacion = dto.presentacion ?: "",
-                            laboratorio = dto.laboratorio ?: "",
+                            laboratorio = (dto.laboratorio ?: "").toDisplayCase(),
                             paisOrigen = dto.paisOrigen ?: "",
                             tipo = dto.tipo ?: "",
                             categoriaTerapeutica = dto.categoriaTerapeutica ?: "",
@@ -144,6 +141,7 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                             descripcion = dto.descripcion ?: ""
                         )
                     }
+                    saveHistory(medications.first())
                     _uiState.value = _uiState.value.copy(
                         foundMedication = medications.first(),
                         alternatives = medications.drop(1),
@@ -179,12 +177,40 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
         }
     }
 
+    private suspend fun saveHistory(medication: Medication) {
+        repository.saveScanHistory(
+            ScanHistory(
+                medicationId = medication.id,
+                nombre = medication.nombre,
+                principioActivo = medication.principioActivo,
+                dosis = medication.dosis,
+                presentacion = medication.presentacion,
+                laboratorio = medication.laboratorio,
+                paisOrigen = medication.paisOrigen,
+                tipo = medication.tipo,
+                categoriaTerapeutica = medication.categoriaTerapeutica,
+                certificacionISP = medication.certificacionISP,
+                descripcion = medication.descripcion
+            )
+        )
+    }
+
     fun setError(message: String) {
         _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = message)
     }
 
     fun dismissResult() {
         _uiState.value = _uiState.value.copy(showResult = false, foundMedication = null)
+    }
+
+    private fun String.toDisplayCase(): String {
+        val letters = filter { it.isLetter() }
+        if (letters.isEmpty()) return this
+        val upperCount = letters.count { it.isUpperCase() }
+        if (upperCount.toDouble() / letters.length < 0.75) return this
+        return split(" ").joinToString(" ") { w ->
+            w.lowercase().replaceFirstChar { it.uppercaseChar() }
+        }
     }
 
     class Factory(private val repository: MedicationRepository) : ViewModelProvider.Factory {

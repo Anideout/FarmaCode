@@ -38,6 +38,8 @@ public interface MedicamentoRepository extends JpaRepository<Medicamento, Long> 
      */
     List<Medicamento> findByPrincipioActivo_NombreIgnoreCase(String nombre);
 
+    List<Medicamento> findByPrincipioActivo_NombreContainingIgnoreCase(String nombre);
+
     /**
      * Busca un medicamento por su nombre comercial exacto, ignorando mayúsculas y minúsculas.
      *

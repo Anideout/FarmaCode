@@ -10,10 +10,18 @@ object RetrofitClient {
 
     private const val BASE_URL = "http://192.168.1.116:8080/"
 
+    private const val API_KEY = "farmacode-secret-2026"
+
     private val httpClient = OkHttpClient .Builder()
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
         })
+        .addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .addHeader("X-Api-Key", API_KEY)
+                .build()
+            chain.proceed(request)
+        }
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)

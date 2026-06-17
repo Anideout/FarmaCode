@@ -1,0 +1,412 @@
+{
+  "app": "FarmaCode",
+  "modulo": "Catálogo de Medicamentos",
+  "generado": "26-06-11",
+  "id_inicio": 13,
+  "resumen": [
+    {
+      "id": "TC-013",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Listado inicial de medicamentos al entrar a Home",
+      "objetivo": "Verificar que HomeViewModel llama a MedicationRepository.getAllMedication() en init y la lista de medicamentos se renderiza desde Room (tabla medications)",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-014",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Búsqueda de medicamento por nombre",
+      "objetivo": "Verificar que onSearchQueryChange(query) invoca searchMedications(query) que filtra por nombre LIKE '%query%' en Room y actualiza la lista en pantalla",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-015",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Búsqueda de medicamento por principio activo",
+      "objetivo": "Verificar que searchMedications() también filtra por principioActivo LIKE '%query%' y retorna medicamentos que coincidan solo en el principio activo",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-016",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Filtrado por categoría terapéutica mediante chip",
+      "objetivo": "Verificar que onCategorySelected(category) invoca getMedicationsByCategory(category) y la lista se filtra mostrando solo medicamentos de esa categoría",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-017",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Chip 'Todos' restaura el listado completo",
+      "objetivo": "Verificar que onCategorySelected('Todos') invoca getAllMedication() y la lista vuelve a mostrar todos los medicamentos de Room sin filtro",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-018",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Ver detalle de medicamento con bioequivalentes en ModalBottomSheet",
+      "objetivo": "Verificar que onMedicationSelected() llama getAlternatives(principioActivo, id) y abre el ModalBottomSheet con los datos del medicamento y su lista de bioequivalentes del mismo principio activo",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-019",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Búsqueda por texto vacío restaura listado completo",
+      "objetivo": "Verificar que cuando el usuario borra el texto del campo de búsqueda (query vacío), onSearchQueryChange('') llama loadMedications() y se muestra el catálogo completo",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-020",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Eliminar entrada del historial de escaneos",
+      "objetivo": "Verificar que onDeleteScanHistory(scan) llama repository.deleteScanHistory(scan) → ScanHistoryDao.delete(scan) y el ítem desaparece de la sección de historial en pantalla home",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-021",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Tap en historial de escaneos abre detalle del medicamento",
+      "objetivo": "Verificar que onScanHistorySelected(scan) construye un objeto Medication desde los campos de ScanHistory y llama onMedicationSelected(), mostrando el ModalBottomSheet con el detalle",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-022",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Catálogo usa Room local sin llamadas al backend Railway",
+      "objetivo": "Verificar que todas las operaciones del catálogo (listado, búsqueda, filtros por categoría, alternativas, historial de escaneos) consultan exclusivamente Room SQLite y no realizan peticiones HTTP al backend Railway",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-023",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Regresión flujo catálogo completo",
+      "objetivo": "Verificar el flujo end-to-end: acceso a Home → búsqueda → filtrado por categoría → selección de medicamento → visualización de bioequivalentes → eliminación de historial, sin errores",
+      "prioridad": "Alta",
+      "tipo": "Regresión",
+      "riesgo": "Medio",
+      "origen": "todos"
+    }
+  ],
+  "detalle": [
+    {
+      "id": "TC-013",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Listado inicial de medicamentos al entrar a Home",
+      "objetivo": "Verificar que HomeViewModel llama a MedicationRepository.getAllMedication() en init y la lista de medicamentos se renderiza desde Room (tabla medications)",
+      "precondiciones": [
+        "Usuario autenticado (sesión activa con UserSession.userEmail != null)",
+        "Tabla medications de Room SQLite contiene al menos 5 registros precargados"
+      ],
+      "pasos": [
+        "1. Navegar a la ruta 'home' desde login",
+        "2. Verificar que la pantalla muestra un indicador de carga (isLoading = true) brevemente",
+        "3. Verificar que la lista de medicamentos se renderiza con los datos de Room",
+        "4. Verificar que los chips de categoría terapéutica aparecen sobre la lista (chip 'Todos' activo por defecto)"
+      ],
+      "datos_prueba": "Tabla medications de Room con registros precargados. Rol: USUARIO_REGISTRADO.",
+      "resultado_esperado": "Lista de medicamentos visible con datos reales de Room. Chips de categoría cargados con 'Todos' seleccionado. Sin mensajes de error.",
+      "criterio_aprobacion": "PASA si la lista muestra medicamentos y los chips de categoría están presentes. FALLA si la lista está vacía cuando Room tiene registros o aparece error.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "HomeViewModel.init llama loadMedications(), loadCategories() y loadScanHistory() en paralelo. MedicationDao.getAllMedications() retorna Flow<List<Medication>> — la UI se actualiza reactivamente.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-014",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Búsqueda de medicamento por nombre",
+      "objetivo": "Verificar que onSearchQueryChange(query) invoca searchMedications(query) que filtra por nombre LIKE '%query%' en Room y actualiza la lista en pantalla",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'home'",
+        "Room SQLite con medicamento 'Paracetamol 500mg' (o similar) en tabla medications"
+      ],
+      "pasos": [
+        "1. Hacer tap en la barra de búsqueda de la pantalla Home",
+        "2. Escribir 'Paracetamol'",
+        "3. Verificar que la lista se actualiza reactivamente mostrando solo medicamentos con 'Paracetamol' en el nombre",
+        "4. Borrar el texto y verificar que la lista vuelve al catálogo completo"
+      ],
+      "datos_prueba": "Query: 'Paracetamol' / Query parcial: 'para' (debe mostrar medicamentos con 'para' en nombre)",
+      "resultado_esperado": "La lista filtra en tiempo real mostrando solo medicamentos cuyo nombre contiene el término buscado. Al borrar, se restaura el listado completo.",
+      "criterio_aprobacion": "PASA si los resultados contienen únicamente medicamentos con el término en el nombre. FALLA si muestra resultados no relacionados o la lista no se actualiza.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "MedicationDao.searchMedications(): WHERE nombre LIKE '%query%' OR principioActivo LIKE '%query%' OR laboratorio LIKE '%query%'. La búsqueda es case-insensitive en SQLite por defecto para ASCII.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-015",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Búsqueda de medicamento por principio activo",
+      "objetivo": "Verificar que searchMedications() también filtra por principioActivo LIKE '%query%' y retorna medicamentos que coincidan solo en el principio activo",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'home'",
+        "Room SQLite con medicamentos que tengan 'Ibuprofeno' en principioActivo (diferente nombre comercial)"
+      ],
+      "pasos": [
+        "1. En la barra de búsqueda escribir 'Ibuprofeno'",
+        "2. Verificar que la lista incluye medicamentos cuyo principioActivo contiene 'Ibuprofeno' aunque el nombre comercial sea diferente (ej: 'Actron', 'Advil')",
+        "3. Verificar que también aparecen si el nombre coincide directamente"
+      ],
+      "datos_prueba": "Query: 'Ibuprofeno' (o el principio activo disponible en Room)",
+      "resultado_esperado": "La lista incluye medicamentos con 'Ibuprofeno' en nombre, principioActivo o laboratorio. La búsqueda es multi-campo.",
+      "criterio_aprobacion": "PASA si medicamentos con el término en principioActivo (aunque no en nombre) aparecen en resultados. FALLA si la búsqueda solo filtra por nombre.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "La query de MedicationDao incluye tres condiciones OR: nombre LIKE, principioActivo LIKE, laboratorio LIKE. Las tres se evalúan en la misma consulta SQLite.",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-016",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Filtrado por categoría terapéutica mediante chip",
+      "objetivo": "Verificar que onCategorySelected(category) invoca getMedicationsByCategory(category) y la lista se filtra mostrando solo medicamentos de esa categoría",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'home'",
+        "Room con medicamentos de al menos 2 categorías terapéuticas distintas"
+      ],
+      "pasos": [
+        "1. Identificar los chips de categoría en la barra horizontal (ej: 'Analgésico', 'Antibiótico')",
+        "2. Pulsar un chip de categoría específico (ej: 'Analgésico')",
+        "3. Verificar que la lista muestra solo medicamentos con categoriaTerapeutica == 'Analgésico'",
+        "4. Pulsar otro chip de categoría diferente",
+        "5. Verificar que la lista cambia al nuevo filtro"
+      ],
+      "datos_prueba": "Categoría de prueba: la que exista en Room con más de un medicamento",
+      "resultado_esperado": "Lista filtrada mostrando solo medicamentos de la categoría seleccionada. El chip activo se marca visualmente.",
+      "criterio_aprobacion": "PASA si todos los medicamentos en la lista pertenecen a la categoría del chip seleccionado. FALLA si aparecen medicamentos de otras categorías.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "MedicationDao.getMedicationsByCategory(): WHERE categoriaTerapeutica = :category. Los chips se cargan con getAllCategories(): SELECT DISTINCT categoriaTerapeutica. El chip 'Todos' se agrega en HomeViewModel: listOf('Todos') + categories.",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-017",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Chip 'Todos' restaura el listado completo",
+      "objetivo": "Verificar que onCategorySelected('Todos') invoca getAllMedication() y la lista vuelve a mostrar todos los medicamentos de Room sin filtro",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'home' con un chip de categoría activo (filtro aplicado)"
+      ],
+      "pasos": [
+        "1. Seleccionar cualquier chip de categoría para aplicar un filtro",
+        "2. Verificar que la lista está filtrada",
+        "3. Pulsar el chip 'Todos'",
+        "4. Verificar que la lista restaura todos los medicamentos de Room"
+      ],
+      "datos_prueba": "N/A — medicamentos precargados en Room",
+      "resultado_esperado": "La lista muestra el total de medicamentos de Room (sin filtro por categoría).",
+      "criterio_aprobacion": "PASA si al pulsar 'Todos' la lista vuelve al conteo total de medicamentos. FALLA si permanece filtrada.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "En onCategorySelected: if (category == null || category == 'Todos') → loadMedications() que llama getAllMedications().",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-018",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Ver detalle de medicamento con bioequivalentes en ModalBottomSheet",
+      "objetivo": "Verificar que onMedicationSelected() llama getAlternatives(principioActivo, id) y abre el ModalBottomSheet con los datos del medicamento y su lista de bioequivalentes del mismo principio activo",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'home'",
+        "Room con al menos un medicamento y al menos un bioequivalente del mismo principio activo"
+      ],
+      "pasos": [
+        "1. Pulsar sobre un medicamento de la lista",
+        "2. Verificar que se abre el ModalBottomSheet",
+        "3. Verificar que el ModalBottomSheet muestra: nombre, principioActivo, dosis, presentación, laboratorio, paisOrigen, descripción del medicamento seleccionado",
+        "4. Verificar que aparece la sección de bioequivalentes con medicamentos del mismo principioActivo (excluyendo el medicamento actual)",
+        "5. Cerrar el ModalBottomSheet pulsando fuera o en el botón de cierre — verificar que desaparece"
+      ],
+      "datos_prueba": "Medicamento con principio activo compartido por al menos otro medicamento en Room",
+      "resultado_esperado": "ModalBottomSheet visible con datos completos. Bioequivalentes listados. Al cerrar, selectedMedication vuelve a null.",
+      "criterio_aprobacion": "PASA si el ModalBottomSheet muestra los datos correctos y los bioequivalentes son del mismo principioActivo. FALLA si los datos son incorrectos o el modal no se abre.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "MedicationDao.getAlternatives(): WHERE principioActivo = :activeIngredient AND id != :currentId. El cierre llama onDismissDialog() que setea selectedMedication = null y alternatives = emptyList().",
+      "prioridad": "Alta",
+      "tipo": "Funcional",
+      "riesgo": "Medio",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-019",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Búsqueda por texto vacío restaura listado completo",
+      "objetivo": "Verificar que cuando el usuario borra el texto del campo de búsqueda (query vacío), onSearchQueryChange('') llama loadMedications() y se muestra el catálogo completo",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'home' con un filtro de búsqueda activo"
+      ],
+      "pasos": [
+        "1. Escribir 'Amoxicilina' en la barra de búsqueda — verificar lista filtrada",
+        "2. Borrar completamente el texto del campo de búsqueda",
+        "3. Verificar que la lista se restaura al catálogo completo"
+      ],
+      "datos_prueba": "Query inicial: 'Amoxicilina' / Query final: '' (vacío)",
+      "resultado_esperado": "Al borrar el texto, la lista vuelve al total de medicamentos de Room sin filtro.",
+      "criterio_aprobacion": "PASA si con query vacío se muestra el catálogo completo. FALLA si la lista permanece filtrada al borrar el texto.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "HomeViewModel.onSearchQueryChange: if (query.isBlank()) { loadMedications() } else { searchMedications(query) }.",
+      "prioridad": "Baja",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-020",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Eliminar entrada del historial de escaneos",
+      "objetivo": "Verificar que onDeleteScanHistory(scan) llama repository.deleteScanHistory(scan) → ScanHistoryDao.delete(scan) y el ítem desaparece de la sección de historial en pantalla home",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'home'",
+        "Tabla scan_history de Room con al menos un registro (generado por un escaneo previo)"
+      ],
+      "pasos": [
+        "1. Verificar que la sección de historial en Home muestra al menos un ítem de escaneo",
+        "2. Pulsar el botón de eliminar (icono basura u opción de borrado) sobre un ítem del historial",
+        "3. Verificar que el ítem desaparece de la lista de historial en pantalla",
+        "4. Verificar en Room que el registro fue eliminado: adb shell sqlite3 ... 'SELECT COUNT(*) FROM scan_history;'"
+      ],
+      "datos_prueba": "Registro de escaneo previo en tabla scan_history",
+      "resultado_esperado": "El ítem desaparece de la lista de historial en pantalla. El registro es eliminado de scan_history en Room.",
+      "criterio_aprobacion": "PASA si el ítem ya no aparece en pantalla y no existe en scan_history. FALLA si el ítem persiste tras la eliminación.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla scan_history"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "ScanHistoryDao.delete() usa @Delete — elimina por objeto completo. getRecentScans() es un Flow reactivo: la UI se actualiza automáticamente tras el delete.",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-021",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Tap en historial de escaneos abre detalle del medicamento",
+      "objetivo": "Verificar que onScanHistorySelected(scan) construye un objeto Medication desde los campos de ScanHistory y llama onMedicationSelected(), mostrando el ModalBottomSheet con el detalle",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'home'",
+        "Al menos un registro en tabla scan_history de Room"
+      ],
+      "pasos": [
+        "1. Localizar la sección de historial de escaneos en Home",
+        "2. Pulsar sobre un ítem del historial",
+        "3. Verificar que se abre el ModalBottomSheet con los datos del medicamento escaneado",
+        "4. Verificar que los datos (nombre, principioActivo, dosis, laboratorio) coinciden con lo almacenado en scan_history"
+      ],
+      "datos_prueba": "Registro de escaneo en scan_history con datos completos del medicamento",
+      "resultado_esperado": "ModalBottomSheet visible con los datos del medicamento del historial. Los datos coinciden con los almacenados en scan_history.",
+      "criterio_aprobacion": "PASA si el ModalBottomSheet muestra los datos correctos del historial seleccionado. FALLA si abre con datos incorrectos o no abre.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla scan_history"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "HomeViewModel.onScanHistorySelected() construye un Medication con los 11 campos de ScanHistory (medicationId, nombre, principioActivo, etc.) y llama onMedicationSelected(medication).",
+      "prioridad": "Media",
+      "tipo": "Funcional",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-022",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Catálogo usa Room local sin llamadas al backend Railway",
+      "objetivo": "Verificar que todas las operaciones del catálogo (listado, búsqueda, filtros por categoría, alternativas, historial de escaneos) consultan exclusivamente Room SQLite y no realizan peticiones HTTP al backend Railway",
+      "precondiciones": [
+        "Usuario autenticado en pantalla 'home'",
+        "Herramienta de monitoreo de red activa (Charles Proxy, Android Studio Network Profiler o adb logcat filtrado por OkHttp)"
+      ],
+      "pasos": [
+        "1. Iniciar captura de tráfico HTTP",
+        "2. Navegar a Home y esperar que cargue el catálogo",
+        "3. Realizar búsqueda por texto",
+        "4. Filtrar por categoría terapéutica",
+        "5. Seleccionar un medicamento para ver bioequivalentes",
+        "6. Revisar el historial de escaneos",
+        "7. Revisar el log de tráfico HTTP — verificar que NO hay peticiones a farmacode-production-c60c.up.railway.app"
+      ],
+      "datos_prueba": "Cualquier medicamento disponible en Room",
+      "resultado_esperado": "Ninguna petición HTTP realizada a Railway durante las operaciones del catálogo. Todos los datos provienen de Room SQLite.",
+      "criterio_aprobacion": "PASA si no hay tráfico HTTP al backend durante las operaciones del catálogo. FALLA si se detectan llamadas a Railway.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications", "Room SQLite: tabla scan_history"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "MedicationRepository solo expone métodos que delegan a MedicationDao (Room) y ScanHistoryDao (Room). RetrofitClient solo es instanciado en ScannerViewModel. El catálogo es 100% offline.",
+      "prioridad": "Alta",
+      "tipo": "Integración",
+      "riesgo": "Bajo",
+      "origen": "código+funcional"
+    },
+    {
+      "id": "TC-023",
+      "area": "Catálogo de Medicamentos",
+      "nombre": "Regresión flujo catálogo completo",
+      "objetivo": "Verificar el flujo end-to-end: acceso a Home → búsqueda por texto → filtrado por categoría → selección de medicamento → visualización de bioequivalentes en ModalBottomSheet → eliminación de un ítem del historial, sin errores",
+      "precondiciones": [
+        "Usuario autenticado",
+        "Room con al menos 5 medicamentos de 2 categorías distintas y al menos 2 bioequivalentes del mismo principio activo",
+        "Al menos 1 registro en scan_history"
+      ],
+      "pasos": [
+        "1. Navegar a 'home' y verificar carga del listado",
+        "2. Buscar un medicamento por nombre — verificar resultados filtrados",
+        "3. Borrar búsqueda — verificar restauración del listado completo",
+        "4. Seleccionar un chip de categoría — verificar filtro",
+        "5. Pulsar 'Todos' — verificar restauración",
+        "6. Pulsar un medicamento — verificar apertura del ModalBottomSheet con datos y bioequivalentes",
+        "7. Cerrar el ModalBottomSheet",
+        "8. Eliminar un ítem del historial de escaneos — verificar que desaparece de la UI"
+      ],
+      "datos_prueba": "Medicamentos precargados en Room. Historial de escaneos con al menos un registro.",
+      "resultado_esperado": "Todos los pasos se ejecutan sin errores. Los datos se muestran correctamente en cada estado. Sin llamadas al backend Railway.",
+      "criterio_aprobacion": "PASA si todos los pasos se completan sin error y la UI responde correctamente en cada transición. FALLA si cualquier paso muestra error o comportamiento inesperado.",
+      "objetos_bd_involucrados": ["Room SQLite: tabla medications", "Room SQLite: tabla scan_history"],
+      "endpoints_involucrados": [],
+      "notas_tecnicas": "Verificar especialmente que al cerrar el ModalBottomSheet selectedMedication vuelve a null (onDismissDialog) y que la lista no pierde el estado previo (searchQuery, selectedCategory).",
+      "prioridad": "Alta",
+      "tipo": "Regresión",
+      "riesgo": "Medio",
+      "origen": "todos"
+    }
+  ]
+}

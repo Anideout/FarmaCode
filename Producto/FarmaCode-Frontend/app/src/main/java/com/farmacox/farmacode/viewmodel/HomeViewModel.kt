@@ -20,8 +20,10 @@ data class HomeUiState(
     val selectedMedication: Medication? = null,
     val alternatives: List<Medication> = emptyList(),
     val isLoading: Boolean = true,
-    val isDarkTheme: Boolean = false
+    val isDarkTheme: Boolean = false,
+    val scanHistory: List<ScanHistory> = emptyList()
 )
+
 class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -29,6 +31,7 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
     init {
         loadMedications()
         loadCategories()
+        loadScanHistory()
     }
 
     private fun loadMedications() {
@@ -46,6 +49,14 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
         viewModelScope.launch {
             repository.getAllCategories().collectLatest { categories ->
                 _uiState.value = _uiState.value.copy(categories = listOf("Todos") + categories)
+            }
+        }
+    }
+
+    private fun loadScanHistory() {
+        viewModelScope.launch {
+            repository.getRecentScans().collectLatest { history ->
+                _uiState.value = _uiState.value.copy(scanHistory = history)
             }
         }
     }
@@ -83,6 +94,29 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
                 selectedMedication = medication,
                 alternatives = alternatives
             )
+        }
+    }
+
+    fun onScanHistorySelected(scan: ScanHistory) {
+        val medication = Medication(
+            id = scan.medicationId,
+            nombre = scan.nombre,
+            principioActivo = scan.principioActivo,
+            dosis = scan.dosis,
+            presentacion = scan.presentacion,
+            laboratorio = scan.laboratorio,
+            paisOrigen = scan.paisOrigen,
+            tipo = scan.tipo,
+            categoriaTerapeutica = scan.categoriaTerapeutica,
+            certificacionISP = scan.certificacionISP,
+            descripcion = scan.descripcion
+        )
+        onMedicationSelected(medication)
+    }
+
+    fun onDeleteScanHistory(scan: ScanHistory) {
+        viewModelScope.launch {
+            repository.deleteScanHistory(scan)
         }
     }
 

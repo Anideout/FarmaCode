@@ -10,6 +10,7 @@ import com.farmacox.farmacode.data.dao.entity.User
 @Database(entities = [User::class], version = 1, exportSchema = false)
 abstract class FarmaCodeDB : RoomDatabase() {
     abstract fun userDao(): UserDao
+    abstract fun scanHistoryDao(): ScanHistoryDao
 
     companion object {
         @Volatile
@@ -29,4 +30,5 @@ abstract class FarmaCodeDB : RoomDatabase() {
             }
         }
     }
+
 }

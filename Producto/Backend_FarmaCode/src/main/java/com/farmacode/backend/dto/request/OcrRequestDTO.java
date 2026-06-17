@@ -1,14 +1,13 @@
 package com.farmacode.backend.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-
 /**
- * DTO de entrada para búsqueda a partir de texto extraído por OCR (reconocimiento óptico).
+ * DTO de entrada para búsqueda a partir de texto extraído por OCR.
  * Usado en el endpoint POST /api/busqueda/ocr.
  *
- * @param textoOcr texto crudo extraído de la fotografía del medicamento
+ * @param textoOcr     texto crudo extraído de la fotografía (puede estar vacío si el OCR falló)
+ * @param imagenBase64 imagen original en Base64 JPEG — usada como fallback cuando el OCR es pobre
  */
 public record OcrRequestDTO(
-        @NotBlank(message = "El texto OCR es obligatorio")
-        String textoOcr
+        String textoOcr,
+        String imagenBase64
 ) {}
