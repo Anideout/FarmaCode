@@ -247,7 +247,7 @@ cd backend
 * Uso de DTOs para transferencia de datos
 * Manejo de errores centralizado
 * Preparado para autenticación futura
-
+* Casos de pruebas - Testing Backend/Frontend
 ---
 
 ## Estado del Proyecto
