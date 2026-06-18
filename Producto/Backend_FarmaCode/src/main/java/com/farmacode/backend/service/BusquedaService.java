@@ -3,12 +3,14 @@ package com.farmacode.backend.service;
 import com.farmacode.backend.dto.response.BioequivalentesResponseDTO;
 import com.farmacode.backend.dto.response.MedicamentoResponseDTO;
 import com.farmacode.backend.entity.HistorialBusqueda;
+import com.farmacode.backend.entity.Usuario;
 import com.farmacode.backend.entity.Medicamento;
 import com.farmacode.backend.entity.PrincipioActivo;
 import com.farmacode.backend.entity.TipoBusqueda;
 import com.farmacode.backend.repository.HistorialBusquedaRepository;
 import com.farmacode.backend.repository.MedicamentoRepository;
 import com.farmacode.backend.repository.PrincipioActivoRepository;
+import com.farmacode.backend.repository.UsuarioRepository;
 import com.farmacode.backend.service.external.GeminiApiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,7 @@ public class BusquedaService {
     private final MedicamentoRepository medicamentoRepository;
     private final PrincipioActivoRepository principioActivoRepository;
     private final HistorialBusquedaRepository historialBusquedaRepository;
+    private final UsuarioRepository usuarioRepository;
     private final GeminiApiService geminiApiService;
     private final MedicamentoService medicamentoService;
 
@@ -40,8 +43,8 @@ public class BusquedaService {
      * Búsqueda por nombre comercial ingresado manualmente.
      */
     @Transactional
-    public BioequivalentesResponseDTO buscarPorNombreComercial(String nombreComercial) {
-        return ejecutarBusqueda(nombreComercial.trim(), TipoBusqueda.MANUAL);
+    public BioequivalentesResponseDTO buscarPorNombreComercial(String nombreComercial, Long userId) {
+        return ejecutarBusqueda(nombreComercial.trim(), TipoBusqueda.MANUAL, userId);
     }
 
     /**
@@ -49,19 +52,19 @@ public class BusquedaService {
      * se aplica el flujo estándar.
      */
     @Transactional
-    public BioequivalentesResponseDTO buscarPorFoto(String imagenBase64) {
+    public BioequivalentesResponseDTO buscarPorFoto(String imagenBase64, Long userId) {
         String nombreIdentificado = geminiApiService.identificarMedicamento(imagenBase64);
         log.info("Gemini identificó medicamento en foto: '{}'", nombreIdentificado);
 
         if (nombreIdentificado.equalsIgnoreCase("NO_ES_MEDICAMENTO")) {
-            guardarHistorial("(foto no medicamento)", TipoBusqueda.FOTO, null, 0);
+            guardarHistorial("(foto no medicamento)", TipoBusqueda.FOTO, null, 0, userId);
             return new BioequivalentesResponseDTO("NO_ES_MEDICAMENTO", null, List.of());
         }
         if (nombreIdentificado.equalsIgnoreCase("DESCONOCIDO") || nombreIdentificado.isBlank()) {
-            guardarHistorial("(foto)", TipoBusqueda.FOTO, null, 0);
+            guardarHistorial("(foto)", TipoBusqueda.FOTO, null, 0, userId);
             return new BioequivalentesResponseDTO("No identificado", null, List.of());
         }
-        return ejecutarBusqueda(nombreIdentificado, TipoBusqueda.FOTO);
+        return ejecutarBusqueda(nombreIdentificado, TipoBusqueda.FOTO, userId);
     }
 
     /**
@@ -72,12 +75,12 @@ public class BusquedaService {
      * 4. En caso contrario, construye un placeholder con los datos extraídos por Gemini.
      */
     @Transactional
-    public BioequivalentesResponseDTO buscarPorOcr(String textoOcr, String imagenBase64) {
+    public BioequivalentesResponseDTO buscarPorOcr(String textoOcr, String imagenBase64, Long userId) {
         boolean textoVacio = textoOcr == null || textoOcr.isBlank();
 
         // Sin texto ni imagen: nada que procesar
         if (textoVacio && (imagenBase64 == null || imagenBase64.isBlank())) {
-            guardarHistorial("(ocr vacío)", TipoBusqueda.OCR, null, 0);
+            guardarHistorial("(ocr vacío)", TipoBusqueda.OCR, null, 0, userId);
             return new BioequivalentesResponseDTO("No identificado", null, List.of());
         }
 
@@ -86,7 +89,7 @@ public class BusquedaService {
             Optional<Medicamento> encontrado = buscarMedicamentoEnTextoOcr(textoOcr);
             if (encontrado.isPresent()) {
                 log.info("Medicamento encontrado en BD por OCR: '{}'", encontrado.get().getNombreComercial());
-                return ejecutarBusqueda(encontrado.get().getNombreComercial(), TipoBusqueda.OCR);
+                return ejecutarBusqueda(encontrado.get().getNombreComercial(), TipoBusqueda.OCR, userId);
             }
         }
 
@@ -119,13 +122,13 @@ public class BusquedaService {
 
         // Imagen completamente ilegible: Gemini no pudo extraer ningún dato útil
         if (info.nombreComercial().equals("N/D") && info.principioActivo().equals("N/D")) {
-            guardarHistorial("(imagen ilegible)", TipoBusqueda.OCR, null, 0);
+            guardarHistorial("(imagen ilegible)", TipoBusqueda.OCR, null, 0, userId);
             return new BioequivalentesResponseDTO("IMAGEN_ILEGIBLE", null, List.of());
         }
 
         // El objeto escaneado no es un medicamento
         if ("NO_ES_MEDICAMENTO".equals(info.nombreComercial())) {
-            guardarHistorial("(no es medicamento)", TipoBusqueda.OCR, null, 0);
+            guardarHistorial("(no es medicamento)", TipoBusqueda.OCR, null, 0, userId);
             return new BioequivalentesResponseDTO("NO_ES_MEDICAMENTO", null, List.of());
         }
 
@@ -153,11 +156,11 @@ public class BusquedaService {
                 boolean tieneInfoEspecifica = (!info.dosis().equals("N/D") && !info.dosis().isBlank())
                         || (!info.laboratorio().equals("N/D") && !info.laboratorio().isBlank());
                 if (tieneInfoEspecifica) {
-                    guardarHistorial(nombreMostrar, TipoBusqueda.OCR, info.principioActivo(), bioequivalentes.size());
+                    guardarHistorial(nombreMostrar, TipoBusqueda.OCR, info.principioActivo(), bioequivalentes.size(), userId);
                     return construirRespuestaConGemini(info, nombreMostrar, bioequivalentes);
                 }
 
-                guardarHistorial(nombreMostrar, TipoBusqueda.OCR, info.principioActivo(), bioequivalentes.size());
+                guardarHistorial(nombreMostrar, TipoBusqueda.OCR, info.principioActivo(), bioequivalentes.size(), userId);
                 return new BioequivalentesResponseDTO(
                         info.principioActivo(), paEnBD.get().getCategoria(), bioequivalentes);
             }
@@ -182,13 +185,13 @@ public class BusquedaService {
             }
         }
 
-        guardarHistorial(nombreMostrar, TipoBusqueda.OCR, principioGuardar, bioequivalentesBD.size());
+        guardarHistorial(nombreMostrar, TipoBusqueda.OCR, principioGuardar, bioequivalentesBD.size(), userId);
         return construirRespuestaConGemini(info, nombreMostrar, bioequivalentesBD);
     }
 
     // ─── Lógica central de búsqueda ───────────────────────────────────────────
 
-    private BioequivalentesResponseDTO ejecutarBusqueda(String nombreComercial, TipoBusqueda tipoBusqueda) {
+    private BioequivalentesResponseDTO ejecutarBusqueda(String nombreComercial, TipoBusqueda tipoBusqueda, Long userId) {
         String principioActivoNombre = null;
         String categoria = null;
         Long matchId = null;
@@ -236,7 +239,7 @@ public class BusquedaService {
                     .collect(Collectors.toList());
         }
 
-        guardarHistorial(nombreComercial, tipoBusqueda, principioActivoNombre, medicamentos.size());
+        guardarHistorial(nombreComercial, tipoBusqueda, principioActivoNombre, medicamentos.size(), userId);
 
         return new BioequivalentesResponseDTO(
                 principioActivoNombre != null ? principioActivoNombre : "No identificado",
@@ -424,12 +427,17 @@ public class BusquedaService {
     // ─── Historial ─────────────────────────────────────────────────────────────
 
     private void guardarHistorial(String terminoBusqueda, TipoBusqueda tipoBusqueda,
-                                   String resultadoPrincipioActivo, int resultadosEncontrados) {
+                                   String resultadoPrincipioActivo, int resultadosEncontrados, Long userId) {
+        Usuario usuario = null;
+        if (userId != null) {
+            usuario = usuarioRepository.findById(userId).orElse(null);
+        }
         HistorialBusqueda historial = HistorialBusqueda.builder()
                 .terminoBusqueda(terminoBusqueda)
                 .tipoBusqueda(tipoBusqueda)
                 .resultadoPrincipioActivo(resultadoPrincipioActivo)
                 .resultadosEncontrados(resultadosEncontrados)
+                .usuario(usuario)
                 .build();
         historialBusquedaRepository.save(historial);
     }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 // Singleton temporal para la sesión (en una app real usarías DataStore o Room)
 object UserSession {
     var userEmail: String? = null
+    var userId: Long? = null
 }
 
 data class ProfileUiState (

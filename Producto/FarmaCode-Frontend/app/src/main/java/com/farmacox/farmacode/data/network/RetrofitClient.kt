@@ -17,10 +17,12 @@ object RetrofitClient {
             level = HttpLoggingInterceptor.Level.BODY
         })
         .addInterceptor { chain ->
-            val request = chain.request().newBuilder()
+            val builder = chain.request().newBuilder()
                 .addHeader("X-Api-Key", API_KEY)
-                .build()
-            chain.proceed(request)
+            com.farmacox.farmacode.viewmodel.UserSession.userId?.let {
+                builder.addHeader("X-User-Id", it.toString())
+            }
+            chain.proceed(builder.build())
         }
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(60, TimeUnit.SECONDS)

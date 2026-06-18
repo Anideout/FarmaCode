@@ -22,8 +22,9 @@ public class ApiKeyFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         String path = request.getRequestURI();
 
-        // Permitir Swagger y health check sin autenticación
-        if (path.startsWith("/swagger-ui") || path.startsWith("/api-docs") || path.equals("/")) {
+        // Permitir Swagger, health check y auth sin autenticación
+        if (path.startsWith("/swagger-ui") || path.startsWith("/api-docs")
+                || path.equals("/") || path.startsWith("/api/auth")) {
             filterChain.doFilter(request, response);
             return;
         }
