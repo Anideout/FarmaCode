@@ -78,8 +78,8 @@ class MedicationRepository(
         }
     }
 
-    fun getRecentScans(): Flow<List<ScanHistory>> =
-        scanHistoryDao?.getRecentScans() ?: flow { emit(emptyList()) }
+    fun getRecentScans(userId: Long): Flow<List<ScanHistory>> =
+        scanHistoryDao?.getRecentScans(userId) ?: flow { emit(emptyList()) }
 
     suspend fun saveScanHistory(scan: ScanHistory) {
         scanHistoryDao?.insert(scan)

@@ -9,7 +9,7 @@ import com.farmacox.farmacode.data.dao.UserDao
 import com.farmacox.farmacode.data.dao.entity.ScanHistory
 import com.farmacox.farmacode.data.dao.entity.User
 
-@Database(entities = [User::class, ScanHistory::class], version = 4, exportSchema = false)
+@Database(entities = [User::class, ScanHistory::class], version = 5, exportSchema = false)
 abstract class FarmaCodeDB : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun scanHistoryDao(): ScanHistoryDao

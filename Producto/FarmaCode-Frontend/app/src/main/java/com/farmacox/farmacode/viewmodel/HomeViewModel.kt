@@ -65,7 +65,8 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
     private fun loadScanHistory() {
         viewModelScope.launch {
             try {
-                repository.getRecentScans().collectLatest { history ->
+                val userId = UserSession.userId ?: 0L
+                repository.getRecentScans(userId).collectLatest { history ->
                     _uiState.value = _uiState.value.copy(scanHistory = history)
                 }
             } catch (_: Exception) { }

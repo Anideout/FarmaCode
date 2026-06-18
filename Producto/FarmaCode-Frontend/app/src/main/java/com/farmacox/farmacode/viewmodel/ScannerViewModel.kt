@@ -153,10 +153,22 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                         errorMessage = null
                     )
                 } else {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = "No se encontró el medicamento en la base de datos."
-                    )
+                    val med = extraerMedicamentoDeTexto(texto)
+                    if (med != null) {
+                        saveHistory(med, "ocr")
+                        _uiState.value = _uiState.value.copy(
+                            foundMedication = med,
+                            alternatives = emptyList(),
+                            isLoading = false,
+                            showResult = true,
+                            errorMessage = null
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = "No se pudo identificar el medicamento."
+                        )
+                    }
                 }
             } catch (e: TimeoutCancellationException) {
                 _uiState.value = _uiState.value.copy(
@@ -180,9 +192,39 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
         }
     }
 
+    private fun extraerMedicamentoDeTexto(texto: String): Medication? {
+        val lineas = texto.lines().map { it.trim() }.filter { it.isNotBlank() }
+        if (lineas.isEmpty()) return null
+
+        val dosisRegex = Regex("""(\d+(?:[.,]\d+)?)\s*(mg|g|mcg|ml|UI|%)""", RegexOption.IGNORE_CASE)
+        val dosis = dosisRegex.find(texto)?.value ?: ""
+
+        val presentaciones = listOf("Comprimido", "Cápsula", "Capsula", "Jarabe", "Solución", "Solucion", "Crema", "Gel", "Gotas", "Inyectable", "Supositorio", "Parche")
+        val presentacion = presentaciones.firstOrNull { texto.contains(it, ignoreCase = true) } ?: ""
+
+        val nombre = lineas.firstOrNull { line ->
+            line.any { it.isLetter() } && !dosisRegex.containsMatchIn(line)
+        } ?: return null
+
+        return Medication(
+            id = "OCR-${System.currentTimeMillis()}",
+            nombre = nombre.toDisplayCase(),
+            principioActivo = nombre.toDisplayCase(),
+            dosis = dosis,
+            presentacion = presentacion,
+            laboratorio = "",
+            paisOrigen = "",
+            tipo = "Otro",
+            categoriaTerapeutica = "Sin categoría",
+            certificacionISP = false,
+            descripcion = "Información extraída por OCR. Puede ser incompleta."
+        )
+    }
+
     private suspend fun saveHistory(medication: Medication, origen: String) {
         repository.saveScanHistory(
             ScanHistory(
+                userId = UserSession.userId ?: 0L,
                 medicationId = medication.id,
                 nombre = medication.nombre,
                 principioActivo = medication.principioActivo,

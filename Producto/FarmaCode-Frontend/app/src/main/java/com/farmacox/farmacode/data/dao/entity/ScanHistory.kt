@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class ScanHistory(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val userId: Long = 0,
     val medicationId: String,
     val nombre: String,
     val principioActivo: String,
