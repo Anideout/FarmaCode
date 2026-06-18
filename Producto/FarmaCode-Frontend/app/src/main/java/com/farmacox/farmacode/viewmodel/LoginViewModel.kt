@@ -53,11 +53,13 @@ class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
                 val response = userRepository.loginOnBackend(state.email, state.password)
                 UserSession.userId = response.id
                 UserSession.userEmail = response.email
-                userRepository.insertUser(
-                    com.farmacox.farmacode.data.dao.entity.User(
-                        name = response.nombre, email = response.email, password = ""
+                try {
+                    userRepository.insertUser(
+                        com.farmacox.farmacode.data.dao.entity.User(
+                            name = response.nombre, email = response.email, password = ""
+                        )
                     )
-                )
+                } catch (_: Exception) { }
                 _uiState.value = _uiState.value.copy(isLoading = false, isLoginSuccessful = true)
             } catch (e: retrofit2.HttpException) {
                 val msg = if (e.code() == 400) "Credenciales incorrectas" else "Error del servidor"

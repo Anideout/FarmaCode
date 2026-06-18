@@ -72,7 +72,9 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
         viewModelScope.launch {
             try {
                 val response = userRepository.registerOnBackend(state.name, state.email, state.password)
-                userRepository.insertUser(User(name = response.nombre, email = response.email, password = ""))
+                try {
+                    userRepository.insertUser(User(name = response.nombre, email = response.email, password = ""))
+                } catch (_: Exception) { }
                 _uiState.value = _uiState.value.copy(isLoading = false, isRegisterSuccessful = true)
             } catch (e: retrofit2.HttpException) {
                 val msg = if (e.code() == 400) "El email ya está registrado" else "Error del servidor"
