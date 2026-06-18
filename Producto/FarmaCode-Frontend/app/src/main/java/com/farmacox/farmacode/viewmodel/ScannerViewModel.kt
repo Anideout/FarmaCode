@@ -124,7 +124,7 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
         viewModelScope.launch {
             try {
                 // Timeout de 15 segundos para evitar que el scope se cuelgue
-                val response = withTimeout(15000L) {
+                val response = withTimeout(45000L) {
                     RetrofitClient.busquedaService.buscarPorOcr(OcrRequest(texto))
                 }
 
