@@ -39,28 +39,36 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
 
     private fun loadMedications() {
         viewModelScope.launch {
-            repository.getAllMedication().collectLatest { medications ->
-                _uiState.value = _uiState.value.copy(
-                    medications = medications,
-                    isLoading = false
-                )
+            try {
+                repository.getAllMedication().collectLatest { medications ->
+                    _uiState.value = _uiState.value.copy(
+                        medications = medications,
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false)
             }
         }
     }
 
     private fun loadCategories() {
         viewModelScope.launch {
-            repository.getAllCategories().collectLatest { categories ->
-                _uiState.value = _uiState.value.copy(categories = listOf("Todos") + categories)
-            }
+            try {
+                repository.getAllCategories().collectLatest { categories ->
+                    _uiState.value = _uiState.value.copy(categories = listOf("Todos") + categories)
+                }
+            } catch (_: Exception) { }
         }
     }
 
     private fun loadScanHistory() {
         viewModelScope.launch {
-            repository.getRecentScans().collectLatest { history ->
-                _uiState.value = _uiState.value.copy(scanHistory = history)
-            }
+            try {
+                repository.getRecentScans().collectLatest { history ->
+                    _uiState.value = _uiState.value.copy(scanHistory = history)
+                }
+            } catch (_: Exception) { }
         }
     }
 

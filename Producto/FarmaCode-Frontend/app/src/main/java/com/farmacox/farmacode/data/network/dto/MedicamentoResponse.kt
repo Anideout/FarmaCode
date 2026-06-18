@@ -19,15 +19,15 @@ data class MedicamentoResponse(
 ) {
     fun toMedication() = Medication(
         id = id.toString(),
-        nombre = nombre,
+        nombre = nombre ?: "",
         principioActivo = principioActivo ?: "",
-        dosis = dosis,
-        presentacion = presentacion,
+        dosis = dosis ?: "",
+        presentacion = presentacion ?: "",
         laboratorio = laboratorio ?: "",
         paisOrigen = paisOrigen ?: "",
         tipo = tipo ?: "",
         categoriaTerapeutica = categoriaTerapeutica ?: "",
-        certificacionISP = certificacionISP,
+        certificacionISP = certificacionISP ?: false,
         descripcion = descripcion ?: ""
     )
 }
