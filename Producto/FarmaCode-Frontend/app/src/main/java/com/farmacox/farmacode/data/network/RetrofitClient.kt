@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit
 
 object RetrofitClient {
 
-    private const val BASE_URL = "http://192.168.1.116:8080/"
+    private const val BASE_URL = "https://farmacode-production-c60c.up.railway.app/"
 
     private const val API_KEY = "farmacode-secret-2026"
 
