@@ -3,8 +3,8 @@ package com.farmacox.farmacode.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.farmacox.farmacode.data.dao.entity.Medication
 import com.farmacox.farmacode.data.dao.entity.ScanHistory
+import com.farmacox.farmacode.data.model.Medication
 import com.farmacox.farmacode.data.network.RetrofitClient
 import com.farmacox.farmacode.repository.MedicationRepository
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -14,17 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.farmacox.farmacode.FarmaCodeApp
-import com.farmacox.farmacode.data.dao.entity.Medication
+import com.farmacox.farmacode.data.model.Medication
 import com.farmacox.farmacode.ui.theme.theme.PrimaryGreen
-import com.farmacox.farmacode.viewmodel.HomeViewModel
-import kotlinx.coroutines.launch
 
 @Composable
 fun MedicationCard(
@@ -33,14 +27,6 @@ fun MedicationCard(
     modifier: Modifier = Modifier,
     fontSize: Float
 ) {
-    val context = LocalContext.current
-    val app = context.applicationContext as FarmaCodeApp
-    val viewModel: HomeViewModel = viewModel(
-        factory = HomeViewModel.Factory(app.repository)
-    )
-    val scope = rememberCoroutineScope()
-    var showDeleteConfirm by remember { mutableStateOf(false) }
-
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -92,14 +78,6 @@ fun MedicationCard(
                 )
             }
 
-            IconButton(onClick = { showDeleteConfirm = true }) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Eliminar",
-                    tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f)
-                )
-            }
-
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = null,
@@ -107,30 +85,5 @@ fun MedicationCard(
                 modifier = Modifier.size(20.dp)
             )
         }
-    }
-
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Eliminar Medicamento") },
-            text = { Text("¿Estás seguro de que quieres eliminar '${medication.nombre}' de tu lista?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        scope.launch {
-                            app.repository.deleteMedication(medication)
-                            showDeleteConfirm = false
-                        }
-                    }
-                ) {
-                    Text("Eliminar", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) {
-                    Text("Cancelar")
-                }
-            }
-        )
     }
 }

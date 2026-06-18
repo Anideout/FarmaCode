@@ -23,6 +23,10 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState
 
+    companion object {
+        private val EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$".toRegex()
+    }
+
     fun onNameChange(name: String) {
         _uiState.value = _uiState.value.copy(name = name, errorMessage = null)
     }
@@ -49,7 +53,7 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
             return
         }
 
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(state.email).matches()) {
+        if (!state.email.matches(EMAIL_REGEX)) {
             _uiState.value = state.copy(errorMessage = "email invalido...")
             return
         }
@@ -64,9 +68,8 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
             return
         }
 
+        _uiState.value = state.copy(isLoading = true)
         viewModelScope.launch {
-            _uiState.value = state.copy(isLoading = true)
-            
             val existingUser = userRepository.getUserByEmail(state.email)
             if (existingUser != null) {
                 _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "El usuario ya existe")

@@ -22,6 +22,10 @@ class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
+    companion object {
+        private val EMAIL_REGEX = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}\$".toRegex()
+    }
+
     fun onEmailChange(email: String) {
         _uiState.value = _uiState.value.copy(email = email, errorMessage = null)
     }
@@ -38,22 +42,20 @@ class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
             return
         }
 
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(state.email).matches()) {
+        if (!state.email.matches(EMAIL_REGEX)) {
             _uiState.value = state.copy(errorMessage = "Email inválido")
             return
         }
 
+        _uiState.value = state.copy(isLoading = true)
         viewModelScope.launch {
-            _uiState.value = state.copy(isLoading = true)
-            
             val user = userRepository.getUserByEmail(state.email)
             
             if (user != null && user.password == state.password) {
-                // GUARDAR SESION
                 UserSession.userEmail = user.email
-                _uiState.value = state.copy(isLoading = false, isLoginSuccessful = true)
+                _uiState.value = _uiState.value.copy(isLoading = false, isLoginSuccessful = true)
             } else {
-                _uiState.value = state.copy(isLoading = false, errorMessage = "Credenciales incorrectas")
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Credenciales incorrectas")
             }
         }
     }
