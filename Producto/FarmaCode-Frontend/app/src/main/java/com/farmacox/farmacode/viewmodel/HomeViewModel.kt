@@ -31,9 +31,10 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private var allMedications: List<Medication> = emptyList()
+
     init {
         loadMedications()
-        loadCategories()
         loadScanHistory()
     }
 
@@ -41,24 +42,19 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
         viewModelScope.launch {
             try {
                 repository.getAllMedication().collectLatest { medications ->
+                    allMedications = medications
+                    val categories = medications
+                        .mapNotNull { it.categoriaTerapeutica.takeIf { c -> c.isNotBlank() } }
+                        .distinct()
                     _uiState.value = _uiState.value.copy(
                         medications = medications,
+                        categories = listOf("Todos") + categories,
                         isLoading = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false)
             }
-        }
-    }
-
-    private fun loadCategories() {
-        viewModelScope.launch {
-            try {
-                repository.getAllCategories().collectLatest { categories ->
-                    _uiState.value = _uiState.value.copy(categories = listOf("Todos") + categories)
-                }
-            } catch (_: Exception) { }
         }
     }
 
@@ -75,48 +71,53 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
 
     fun onSearchQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
+        if (query.isBlank()) {
+            applyCurrentCategoryFilter()
+            return
+        }
+        if (query.length < 2) return
+
         viewModelScope.launch {
-            if (query.isBlank()) {
-                loadMedications()
-            } else if (query.length >= 2) {
-                try {
-                    val dtos = RetrofitClient.busquedaService.buscarMedicamentos(query)
-                    val medications = dtos.map { dto ->
-                        Medication(
-                            id = dto.id.toString(),
-                            nombre = dto.nombre,
-                            principioActivo = dto.principioActivo ?: "",
-                            dosis = dto.dosis ?: "",
-                            presentacion = dto.presentacion ?: "",
-                            laboratorio = dto.laboratorio ?: "",
-                            paisOrigen = dto.paisOrigen ?: "",
-                            tipo = dto.tipo ?: "",
-                            categoriaTerapeutica = dto.categoriaTerapeutica ?: "",
-                            certificacionISP = dto.certificacionISP ?: false,
-                            descripcion = dto.descripcion ?: ""
-                        )
-                    }
-                    _uiState.value = _uiState.value.copy(medications = medications)
-                } catch (e: Exception) {
-                    repository.searchMedications(query).collectLatest { medications ->
-                        _uiState.value = _uiState.value.copy(medications = medications)
-                    }
+            try {
+                val dtos = RetrofitClient.busquedaService.buscarMedicamentos(query)
+                val medications = dtos.map { dto ->
+                    Medication(
+                        id = dto.id.toString(),
+                        nombre = dto.nombre,
+                        principioActivo = dto.principioActivo ?: "",
+                        dosis = dto.dosis ?: "",
+                        presentacion = dto.presentacion ?: "",
+                        laboratorio = dto.laboratorio ?: "",
+                        paisOrigen = dto.paisOrigen ?: "",
+                        tipo = dto.tipo ?: "",
+                        categoriaTerapeutica = dto.categoriaTerapeutica ?: "",
+                        certificacionISP = dto.certificacionISP ?: false,
+                        descripcion = dto.descripcion ?: ""
+                    )
                 }
+                _uiState.value = _uiState.value.copy(medications = medications)
+            } catch (e: Exception) {
+                val filtered = allMedications.filter {
+                    it.nombre.contains(query, ignoreCase = true) ||
+                    it.principioActivo.contains(query, ignoreCase = true)
+                }
+                _uiState.value = _uiState.value.copy(medications = filtered)
             }
         }
     }
 
     fun onCategorySelected(category: String?) {
         _uiState.value = _uiState.value.copy(selectedCategory = category)
-        viewModelScope.launch {
-            if (category == null || category == "Todos") {
-                loadMedications()
-            } else {
-                repository.getMedicationsByCategory(category).collectLatest { medications ->
-                    _uiState.value = _uiState.value.copy(medications = medications)
-                }
-            }
+        applyCurrentCategoryFilter(category)
+    }
+
+    private fun applyCurrentCategoryFilter(category: String? = _uiState.value.selectedCategory) {
+        val filtered = if (category == null || category == "Todos") {
+            allMedications
+        } else {
+            allMedications.filter { it.categoriaTerapeutica == category }
         }
+        _uiState.value = _uiState.value.copy(medications = filtered)
     }
 
     fun onMedicationSelected(medication: Medication) {

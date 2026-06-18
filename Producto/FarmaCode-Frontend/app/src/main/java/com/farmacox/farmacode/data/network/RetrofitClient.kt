@@ -1,7 +1,6 @@
 package com.farmacox.farmacode.data.network
 
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
@@ -12,10 +11,7 @@ object RetrofitClient {
 
     private const val API_KEY = "farmacode-secret-2026"
 
-    private val httpClient = OkHttpClient .Builder()
-        .addInterceptor(HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        })
+    private val httpClient = OkHttpClient.Builder()
         .addInterceptor { chain ->
             val builder = chain.request().newBuilder()
                 .addHeader("X-Api-Key", API_KEY)
