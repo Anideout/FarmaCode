@@ -63,7 +63,7 @@ class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
                 val msg = if (e.code() == 400) "Credenciales incorrectas" else "Error del servidor"
                 _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg)
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Sin conexión al servidor")
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Sin respuesta del servidor, intenta de nuevo")
             }
         }
     }
