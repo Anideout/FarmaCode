@@ -5,7 +5,7 @@ import com.farmacox.farmacode.data.network.dto.BioequivalentesResponse
 import com.farmacox.farmacode.data.network.dto.ChatRequest
 import com.farmacox.farmacode.data.network.dto.ChatResponse
 import com.farmacox.farmacode.data.network.dto.LoginRequest
-import com.farmacox.farmacode.data.network.dto.MedicamentoDto
+import com.farmacox.farmacode.data.network.dto.MedicamentoResponse
 import com.farmacox.farmacode.data.network.dto.OcrRequest
 import com.farmacox.farmacode.data.network.dto.RegisterRequest
 import retrofit2.http.Body
@@ -22,7 +22,7 @@ interface BusquedaApiService {
     suspend fun chat(@Body request: ChatRequest): ChatResponse
 
     @GET("api/medicamentos/buscar")
-    suspend fun buscarMedicamentos(@Query("nombre") nombre: String): List<MedicamentoDto>
+    suspend fun buscarMedicamentos(@Query("nombre") nombre: String): List<MedicamentoResponse>
 
     @POST("api/auth/register")
     suspend fun register(@Body request: RegisterRequest): AuthResponse
