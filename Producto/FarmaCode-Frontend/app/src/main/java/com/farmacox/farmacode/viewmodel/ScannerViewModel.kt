@@ -116,16 +116,29 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
     }
 
     fun buscarPorTextoOcr(texto: String, imagenBase64: String? = null) {
-        val textoVacio = texto.isBlank()
-        if (_uiState.value.isLoading || (textoVacio && imagenBase64 == null)) return
+        if (_uiState.value.isLoading || (texto.isBlank() && imagenBase64 == null)) return
 
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
             try {
-                // Timeout de 15 segundos para evitar que el scope se cuelgue
                 val response = withTimeout(45000L) {
-                    RetrofitClient.busquedaService.buscarPorOcr(OcrRequest(texto))
+                    RetrofitClient.busquedaService.buscarPorOcr(OcrRequest(imagenBase64 ?: ""))
+                }
+
+                if (response.principioActivo == "NO_ES_MEDICAMENTO") {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "Esto no parece ser un medicamento. Apunta al envase de un medicamento."
+                    )
+                    return@launch
+                }
+                if (response.principioActivo == "IMAGEN_ILEGIBLE") {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "La imagen no es legible. Intenta con mejor iluminación o enfoca el envase."
+                    )
+                    return@launch
                 }
 
                 if (response.medicamentos.isNotEmpty()) {
@@ -153,22 +166,10 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
                         errorMessage = null
                     )
                 } else {
-                    val med = extraerMedicamentoDeTexto(texto)
-                    if (med != null) {
-                        saveHistory(med, "ocr")
-                        _uiState.value = _uiState.value.copy(
-                            foundMedication = med,
-                            alternatives = emptyList(),
-                            isLoading = false,
-                            showResult = true,
-                            errorMessage = null
-                        )
-                    } else {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            errorMessage = "No se pudo identificar el medicamento."
-                        )
-                    }
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "No se encontró el medicamento en la base de datos."
+                    )
                 }
             } catch (e: TimeoutCancellationException) {
                 _uiState.value = _uiState.value.copy(
@@ -178,47 +179,18 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
             } catch (e: HttpException) {
                 val errorMsg = try {
                     val body = e.response()?.errorBody()?.string() ?: ""
-                    JSONObject(body).optString("message", "Error ${e.code()}")
+                    JSONObject(body).optString("message", e.message ?: "HTTP ${e.code()}")
                 } catch (_: Exception) {
-                    "Error ${e.code()}: ${e.message}"
+                    e.message ?: "HTTP ${e.code()}"
                 }
                 _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = errorMsg)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = "Error: ${e.message ?: "Desconocido"}"
+                    errorMessage = "Error: ${e.message}"
                 )
             }
         }
-    }
-
-    private fun extraerMedicamentoDeTexto(texto: String): Medication? {
-        val lineas = texto.lines().map { it.trim() }.filter { it.isNotBlank() }
-        if (lineas.isEmpty()) return null
-
-        val dosisRegex = Regex("""(\d+(?:[.,]\d+)?)\s*(mg|g|mcg|ml|UI|%)""", RegexOption.IGNORE_CASE)
-        val dosis = dosisRegex.find(texto)?.value ?: ""
-
-        val presentaciones = listOf("Comprimido", "Cápsula", "Capsula", "Jarabe", "Solución", "Solucion", "Crema", "Gel", "Gotas", "Inyectable", "Supositorio", "Parche")
-        val presentacion = presentaciones.firstOrNull { texto.contains(it, ignoreCase = true) } ?: ""
-
-        val nombre = lineas.firstOrNull { line ->
-            line.any { it.isLetter() } && !dosisRegex.containsMatchIn(line)
-        } ?: return null
-
-        return Medication(
-            id = "OCR-${System.currentTimeMillis()}",
-            nombre = nombre.toDisplayCase(),
-            principioActivo = nombre.toDisplayCase(),
-            dosis = dosis,
-            presentacion = presentacion,
-            laboratorio = "",
-            paisOrigen = "",
-            tipo = "Otro",
-            categoriaTerapeutica = "Sin categoría",
-            certificacionISP = false,
-            descripcion = "Información extraída por OCR. Puede ser incompleta."
-        )
     }
 
     private suspend fun saveHistory(medication: Medication, origen: String) {
