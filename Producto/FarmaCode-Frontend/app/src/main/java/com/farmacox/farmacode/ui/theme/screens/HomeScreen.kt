@@ -220,6 +220,20 @@ fun HomeScreen(
                 }
             }
 
+            // Carga inicial
+            if (uiState.isLoading && uiState.searchQuery.isBlank()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = PrimaryGreen)
+                    }
+                }
+            }
+
             // Historial de escaneos
             if (uiState.scanHistory.isNotEmpty()) {
                 item {
@@ -281,28 +295,83 @@ fun HomeScreen(
                     )
                 }
                 item { Spacer(Modifier.height(8.dp)) }
-            }
-
-            // Lista de medicamentos
-            if (uiState.isLoading) {
+            } else if (!uiState.isLoading && uiState.searchQuery.isBlank()) {
                 item {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(32.dp),
+                            .padding(horizontal = 16.dp, vertical = 32.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator(color = PrimaryGreen)
+                        Text(
+                            text = if (isEnglish) "No recent history. Scan a medication to get started."
+                                   else "Sin historial. Escanea un medicamento para comenzar.",
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.45f),
+                            fontSize = (fontSize - 1).sp
+                        )
                     }
                 }
-            } else {
-                items(uiState.medications) { medication ->
-                    MedicationCard(
-                        medication = medication,
-                        onClick = { viewModel.onMedicationSelected(medication) },
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-                        fontSize = fontSize
-                    )
+            }
+
+            // Lista de medicamentos — solo visible cuando hay búsqueda activa
+            if (uiState.searchQuery.isNotBlank()) {
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MedicalServices,
+                            contentDescription = null,
+                            tint = PrimaryGreen,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = if (isEnglish) "Results" else "Resultados",
+                            fontSize = (fontSize + 1).sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
+                if (uiState.isLoading) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = PrimaryGreen)
+                        }
+                    }
+                } else if (uiState.medications.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (isEnglish) "No medications found" else "No se encontraron medicamentos",
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                                fontSize = fontSize.sp
+                            )
+                        }
+                    }
+                } else {
+                    items(uiState.medications) { medication ->
+                        MedicationCard(
+                            medication = medication,
+                            onClick = { viewModel.onMedicationSelected(medication) },
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+                            fontSize = fontSize
+                        )
+                    }
                 }
             }
         }
