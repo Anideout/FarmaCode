@@ -217,6 +217,16 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
         _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = message)
     }
 
+    fun selectAlternative(medication: Medication) {
+        val current = _uiState.value
+        val remaining = current.alternatives.filter { it.id != medication.id }
+        val previous = current.foundMedication
+        _uiState.value = current.copy(
+            foundMedication = medication,
+            alternatives = if (previous != null) listOf(previous) + remaining else remaining
+        )
+    }
+
     fun dismissResult() {
         _uiState.value = _uiState.value.copy(showResult = false, foundMedication = null)
     }

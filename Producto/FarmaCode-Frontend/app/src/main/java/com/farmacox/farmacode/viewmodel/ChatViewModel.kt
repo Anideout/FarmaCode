@@ -45,6 +45,7 @@ class ChatViewModel(private val repository: MedicationRepository) : ViewModel() 
     }
 
     fun sendMessage(message: String) {
+        if (_uiState.value.isLoading) return
         val userMsg = ChatMessage(content = message, isUser = true)
         _uiState.value = _uiState.value.copy(
             messages = _uiState.value.messages + userMsg,

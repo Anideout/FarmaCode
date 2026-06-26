@@ -45,6 +45,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -88,7 +89,9 @@ fun HomeScreen(
     var showDialog by remember { mutableStateOf(false) }
     val isEnglish = language == "English"
 
-    if (uiState.selectedMedication != null) showDialog = true
+    LaunchedEffect(uiState.selectedMedication) {
+        if (uiState.selectedMedication != null) showDialog = true
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {

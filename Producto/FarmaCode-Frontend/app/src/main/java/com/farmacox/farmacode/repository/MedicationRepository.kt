@@ -15,7 +15,7 @@ class MedicationRepository(
 
     fun getAllMedication(): Flow<List<Medication>> = flow {
         try {
-            val response = apiService.getAllMedicamentos(size = 1000)
+            val response = apiService.getAllMedicamentos(size = 200)
             val medications = response.content.map { it.toMedication() }
             emit(medications)
         } catch (e: Exception) {

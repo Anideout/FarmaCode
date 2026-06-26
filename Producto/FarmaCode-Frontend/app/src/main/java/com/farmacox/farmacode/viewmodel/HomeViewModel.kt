@@ -7,6 +7,8 @@ import com.farmacox.farmacode.data.dao.entity.ScanHistory
 import com.farmacox.farmacode.data.model.Medication
 import com.farmacox.farmacode.data.network.RetrofitClient
 import com.farmacox.farmacode.repository.MedicationRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,7 +23,7 @@ data class HomeUiState(
     val searchQuery: String = "",
     val selectedMedication: Medication? = null,
     val alternatives: List<Medication> = emptyList(),
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
     val isDarkTheme: Boolean = false,
     val scanHistory: List<ScanHistory> = emptyList(),
     val historyFilter: String = "Todos"
@@ -32,13 +34,17 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     private var allMedications: List<Medication> = emptyList()
+    private var searchJob: Job? = null
+    private var alternativesJob: Job? = null
 
     init {
-        loadMedications()
         loadScanHistory()
+        loadMedicationsBackground()
     }
 
-    private fun loadMedications() {
+    // Loads medications in background only to populate categories and the local fallback cache.
+    // Does NOT touch isLoading so the history view is never blocked.
+    private fun loadMedicationsBackground() {
         viewModelScope.launch {
             try {
                 repository.getAllMedication().collectLatest { medications ->
@@ -47,14 +53,10 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
                         .mapNotNull { it.categoriaTerapeutica.takeIf { c -> c.isNotBlank() } }
                         .distinct()
                     _uiState.value = _uiState.value.copy(
-                        medications = medications,
-                        categories = listOf("Todos") + categories,
-                        isLoading = false
+                        categories = listOf("Todos") + categories
                     )
                 }
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false)
-            }
+            } catch (_: Exception) { }
         }
     }
 
@@ -71,13 +73,17 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
 
     fun onSearchQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
+        searchJob?.cancel()
         if (query.isBlank()) {
+            _uiState.value = _uiState.value.copy(isLoading = false, medications = emptyList())
             applyCurrentCategoryFilter()
             return
         }
         if (query.length < 2) return
 
-        viewModelScope.launch {
+        searchJob = viewModelScope.launch {
+            delay(300)
+            _uiState.value = _uiState.value.copy(isLoading = true)
             try {
                 val dtos = RetrofitClient.busquedaService.buscarMedicamentos(query)
                 val medications = dtos.map { dto ->
@@ -95,13 +101,13 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
                         descripcion = dto.descripcion ?: ""
                     )
                 }
-                _uiState.value = _uiState.value.copy(medications = medications)
+                _uiState.value = _uiState.value.copy(medications = medications, isLoading = false)
             } catch (e: Exception) {
                 val filtered = allMedications.filter {
                     it.nombre.contains(query, ignoreCase = true) ||
                     it.principioActivo.contains(query, ignoreCase = true)
                 }
-                _uiState.value = _uiState.value.copy(medications = filtered)
+                _uiState.value = _uiState.value.copy(medications = filtered, isLoading = false)
             }
         }
     }
@@ -121,12 +127,13 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
     }
 
     fun onMedicationSelected(medication: Medication) {
-        viewModelScope.launch {
+        // Ignore taps on the same medication that's already showing
+        if (_uiState.value.selectedMedication?.id == medication.id) return
+        alternativesJob?.cancel()
+        _uiState.value = _uiState.value.copy(selectedMedication = medication, alternatives = emptyList())
+        alternativesJob = viewModelScope.launch {
             val alternatives = repository.getAlternatives(medication.principioActivo, medication.id)
-            _uiState.value = _uiState.value.copy(
-                selectedMedication = medication,
-                alternatives = alternatives
-            )
+            _uiState.value = _uiState.value.copy(alternatives = alternatives)
         }
     }
 
@@ -158,6 +165,7 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
     }
 
     fun onDismissDialog() {
+        alternativesJob?.cancel()
         _uiState.value = _uiState.value.copy(selectedMedication = null, alternatives = emptyList())
     }
 

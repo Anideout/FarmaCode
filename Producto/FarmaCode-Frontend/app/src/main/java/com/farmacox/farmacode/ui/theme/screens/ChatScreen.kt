@@ -206,25 +206,27 @@ fun ChatScreen(
 
             Spacer(modifier = Modifier.width(8.dp))
 
+            val canSend = messageText.isNotBlank() && !uiState.isLoading
             IconButton(
                 onClick = {
-                    if (messageText.isNotBlank()) {
+                    if (canSend) {
                         viewModel.sendMessage(messageText)
                         messageText = ""
                     }
                 },
+                enabled = canSend,
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
                     .background(
-                        if (messageText.isNotBlank()) PrimaryGreen
+                        if (canSend) PrimaryGreen
                         else MaterialTheme.colorScheme.surfaceVariant
                     )
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.Send,
                     contentDescription = "Enviar",
-                    tint = if (messageText.isNotBlank()) MaterialTheme.colorScheme.onPrimary
+                    tint = if (canSend) MaterialTheme.colorScheme.onPrimary
                     else MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

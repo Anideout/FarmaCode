@@ -249,7 +249,7 @@ fun ScannerScreen(
                     medication = uiState.foundMedication!!,
                     alternatives = uiState.alternatives,
                     onDismiss = { viewModel.dismissResult() },
-                    onAlternativeClick = { },
+                    onAlternativeClick = { alt -> viewModel.selectAlternative(alt) },
                     fontSize = fontSize,
                     language = language
                 )
