@@ -212,6 +212,7 @@ fun ChatScreen(
                     if (canSend) {
                         viewModel.sendMessage(messageText)
                         messageText = ""
+                        keyboardController?.hide()
                     }
                 },
                 enabled = canSend,

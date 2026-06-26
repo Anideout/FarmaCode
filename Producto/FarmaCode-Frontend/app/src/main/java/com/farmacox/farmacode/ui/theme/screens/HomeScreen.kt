@@ -105,16 +105,7 @@ fun HomeScreen(
                     isEnglish = isEnglish
                 )
             }
-            stickyHeader {
-                CategoryFilterRow(
-                    categories = uiState.categories,
-                    selectedCategory = uiState.selectedCategory,
-                    onCategorySelected = { viewModel.onCategorySelected(if (it == "Todos") null else it) },
-                    fontSize = fontSize,
-                    isEnglish = isEnglish
-                )
-            }
-            if (uiState.searchQuery.isBlank()) {
+                if (uiState.searchQuery.isBlank()) {
                 historialSection(
                     uiState = uiState,
                     fontSize = fontSize,
@@ -128,7 +119,7 @@ fun HomeScreen(
                     uiState = uiState,
                     fontSize = fontSize,
                     isEnglish = isEnglish,
-                    onMedicationClick = { viewModel.onMedicationSelected(it) }
+                    onMedicationClick = { viewModel.onMedicationSelected(it, saveToHistory = true) }
                 )
             }
         }

@@ -126,11 +126,31 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
         _uiState.value = _uiState.value.copy(medications = filtered)
     }
 
-    fun onMedicationSelected(medication: Medication) {
-        // Ignore taps on the same medication that's already showing
+    fun onMedicationSelected(medication: Medication, saveToHistory: Boolean = false) {
         if (_uiState.value.selectedMedication?.id == medication.id) return
         alternativesJob?.cancel()
         _uiState.value = _uiState.value.copy(selectedMedication = medication, alternatives = emptyList())
+        if (saveToHistory) {
+            viewModelScope.launch {
+                repository.saveScanHistory(
+                    ScanHistory(
+                        userId = UserSession.userId ?: 0L,
+                        medicationId = medication.id,
+                        nombre = medication.nombre,
+                        principioActivo = medication.principioActivo,
+                        dosis = medication.dosis,
+                        presentacion = medication.presentacion,
+                        laboratorio = medication.laboratorio,
+                        paisOrigen = medication.paisOrigen,
+                        tipo = medication.tipo,
+                        categoriaTerapeutica = medication.categoriaTerapeutica,
+                        certificacionISP = medication.certificacionISP,
+                        descripcion = medication.descripcion,
+                        origen = "busqueda"
+                    )
+                )
+            }
+        }
         alternativesJob = viewModelScope.launch {
             val alternatives = repository.getAlternatives(medication.principioActivo, medication.id)
             _uiState.value = _uiState.value.copy(alternatives = alternatives)
