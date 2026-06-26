@@ -8,6 +8,6 @@ import com.farmacox.farmacode.repository.UserRepository
 
 class FarmaCodeApp : Application() {
     val database by lazy { FarmaCodeDB.getDatabase(this) }
-    val repository by lazy { MedicationRepository(RetrofitClient.apiService) }
+    val repository by lazy { MedicationRepository(RetrofitClient.apiService, database.scanHistoryDao()) }
     val userRepository by lazy { UserRepository(database.userDao()) }
 }

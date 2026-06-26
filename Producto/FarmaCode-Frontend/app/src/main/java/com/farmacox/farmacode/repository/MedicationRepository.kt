@@ -1,5 +1,7 @@
 package com.farmacox.farmacode.repository
 
+import com.farmacox.farmacode.data.dao.ScanHistoryDao
+import com.farmacox.farmacode.data.dao.entity.ScanHistory
 import com.farmacox.farmacode.data.model.Medication
 import com.farmacox.farmacode.data.network.FarmaCodeApiService
 import com.farmacox.farmacode.data.network.RetrofitClient
@@ -7,12 +9,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 class MedicationRepository(
-    private val apiService: FarmaCodeApiService = RetrofitClient.apiService
+    private val apiService: FarmaCodeApiService = RetrofitClient.apiService,
+    private val scanHistoryDao: ScanHistoryDao? = null
 ) {
 
     fun getAllMedication(): Flow<List<Medication>> = flow {
         try {
-            val response = apiService.getAllMedicamentos(size = 1000)
+            val response = apiService.getAllMedicamentos(size = 200)
             val medications = response.content.map { it.toMedication() }
             emit(medications)
         } catch (e: Exception) {
@@ -73,5 +76,16 @@ class MedicationRepository(
         } catch (e: Exception) {
             emit(emptyList())
         }
+    }
+
+    fun getRecentScans(userId: Long): Flow<List<ScanHistory>> =
+        scanHistoryDao?.getRecentScans(userId) ?: flow { emit(emptyList()) }
+
+    suspend fun saveScanHistory(scan: ScanHistory) {
+        scanHistoryDao?.insert(scan)
+    }
+
+    suspend fun deleteScanHistory(scan: ScanHistory) {
+        scanHistoryDao?.delete(scan)
     }
 }

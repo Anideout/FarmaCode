@@ -3,8 +3,12 @@ package com.farmacox.farmacode.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.farmacox.farmacode.data.dao.entity.ScanHistory
 import com.farmacox.farmacode.data.model.Medication
+import com.farmacox.farmacode.data.network.RetrofitClient
 import com.farmacox.farmacode.repository.MedicationRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,81 +23,137 @@ data class HomeUiState(
     val searchQuery: String = "",
     val selectedMedication: Medication? = null,
     val alternatives: List<Medication> = emptyList(),
-    val isLoading: Boolean = true,
+    val isLoading: Boolean = false,
     val isDarkTheme: Boolean = false,
-    val scanHistory: List<ScanHistory> = emptyList()
+    val scanHistory: List<ScanHistory> = emptyList(),
+    val historyFilter: String = "Todos"
 )
 
 class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private var allMedications: List<Medication> = emptyList()
+    private var searchJob: Job? = null
+    private var alternativesJob: Job? = null
+
     init {
-        loadMedications()
-        loadCategories()
         loadScanHistory()
+        loadMedicationsBackground()
     }
 
-    private fun loadMedications() {
+    // Loads medications in background only to populate categories and the local fallback cache.
+    // Does NOT touch isLoading so the history view is never blocked.
+    private fun loadMedicationsBackground() {
         viewModelScope.launch {
-            repository.getAllMedication().collectLatest { medications ->
-                _uiState.value = _uiState.value.copy(
-                    medications = medications,
-                    isLoading = false
-                )
-            }
-        }
-    }
-
-    private fun loadCategories() {
-        viewModelScope.launch {
-            repository.getAllCategories().collectLatest { categories ->
-                _uiState.value = _uiState.value.copy(categories = listOf("Todos") + categories)
-            }
+            try {
+                repository.getAllMedication().collectLatest { medications ->
+                    allMedications = medications
+                    val categories = medications
+                        .mapNotNull { it.categoriaTerapeutica.takeIf { c -> c.isNotBlank() } }
+                        .distinct()
+                    _uiState.value = _uiState.value.copy(
+                        categories = listOf("Todos") + categories
+                    )
+                }
+            } catch (_: Exception) { }
         }
     }
 
     private fun loadScanHistory() {
         viewModelScope.launch {
-            repository.getRecentScans().collectLatest { history ->
-                _uiState.value = _uiState.value.copy(scanHistory = history)
-            }
+            try {
+                val userId = UserSession.userId ?: 0L
+                repository.getRecentScans(userId).collectLatest { history ->
+                    _uiState.value = _uiState.value.copy(scanHistory = history)
+                }
+            } catch (_: Exception) { }
         }
     }
 
     fun onSearchQueryChange(query: String) {
         _uiState.value = _uiState.value.copy(searchQuery = query)
-        viewModelScope.launch {
-            if (query.isBlank()) {
-                loadMedications()
-            } else {
-                repository.searchMedications(query).collectLatest { medications ->
-                    _uiState.value = _uiState.value.copy(medications = medications)
+        searchJob?.cancel()
+        if (query.isBlank()) {
+            _uiState.value = _uiState.value.copy(isLoading = false, medications = emptyList())
+            applyCurrentCategoryFilter()
+            return
+        }
+        if (query.length < 2) return
+
+        searchJob = viewModelScope.launch {
+            delay(300)
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val dtos = RetrofitClient.busquedaService.buscarMedicamentos(query)
+                val medications = dtos.map { dto ->
+                    Medication(
+                        id = dto.id.toString(),
+                        nombre = dto.nombre,
+                        principioActivo = dto.principioActivo ?: "",
+                        dosis = dto.dosis ?: "",
+                        presentacion = dto.presentacion ?: "",
+                        laboratorio = dto.laboratorio ?: "",
+                        paisOrigen = dto.paisOrigen ?: "",
+                        tipo = dto.tipo ?: "",
+                        categoriaTerapeutica = dto.categoriaTerapeutica ?: "",
+                        certificacionISP = dto.certificacionISP ?: false,
+                        descripcion = dto.descripcion ?: ""
+                    )
                 }
+                _uiState.value = _uiState.value.copy(medications = medications, isLoading = false)
+            } catch (e: Exception) {
+                val filtered = allMedications.filter {
+                    it.nombre.contains(query, ignoreCase = true) ||
+                    it.principioActivo.contains(query, ignoreCase = true)
+                }
+                _uiState.value = _uiState.value.copy(medications = filtered, isLoading = false)
             }
         }
     }
 
     fun onCategorySelected(category: String?) {
         _uiState.value = _uiState.value.copy(selectedCategory = category)
-        viewModelScope.launch {
-            if (category == null || category == "Todos") {
-                loadMedications()
-            } else {
-                repository.getMedicationsByCategory(category).collectLatest { medications ->
-                    _uiState.value = _uiState.value.copy(medications = medications)
-                }
-            }
-        }
+        applyCurrentCategoryFilter(category)
     }
 
-    fun onMedicationSelected(medication: Medication) {
-        viewModelScope.launch {
+    private fun applyCurrentCategoryFilter(category: String? = _uiState.value.selectedCategory) {
+        val filtered = if (category == null || category == "Todos") {
+            allMedications
+        } else {
+            allMedications.filter { it.categoriaTerapeutica == category }
+        }
+        _uiState.value = _uiState.value.copy(medications = filtered)
+    }
+
+    fun onMedicationSelected(medication: Medication, saveToHistory: Boolean = false) {
+        if (_uiState.value.selectedMedication?.id == medication.id) return
+        alternativesJob?.cancel()
+        _uiState.value = _uiState.value.copy(selectedMedication = medication, alternatives = emptyList())
+        if (saveToHistory) {
+            viewModelScope.launch {
+                repository.saveScanHistory(
+                    ScanHistory(
+                        userId = UserSession.userId ?: 0L,
+                        medicationId = medication.id,
+                        nombre = medication.nombre,
+                        principioActivo = medication.principioActivo,
+                        dosis = medication.dosis,
+                        presentacion = medication.presentacion,
+                        laboratorio = medication.laboratorio,
+                        paisOrigen = medication.paisOrigen,
+                        tipo = medication.tipo,
+                        categoriaTerapeutica = medication.categoriaTerapeutica,
+                        certificacionISP = medication.certificacionISP,
+                        descripcion = medication.descripcion,
+                        origen = "busqueda"
+                    )
+                )
+            }
+        }
+        alternativesJob = viewModelScope.launch {
             val alternatives = repository.getAlternatives(medication.principioActivo, medication.id)
-            _uiState.value = _uiState.value.copy(
-                selectedMedication = medication,
-                alternatives = alternatives
-            )
+            _uiState.value = _uiState.value.copy(alternatives = alternatives)
         }
     }
 
@@ -120,7 +180,12 @@ class HomeViewModel(private val repository: MedicationRepository): ViewModel() {
         }
     }
 
+    fun onHistoryFilterChange(filter: String) {
+        _uiState.value = _uiState.value.copy(historyFilter = filter)
+    }
+
     fun onDismissDialog() {
+        alternativesJob?.cancel()
         _uiState.value = _uiState.value.copy(selectedMedication = null, alternatives = emptyList())
     }
 

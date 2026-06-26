@@ -4,13 +4,16 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.farmacox.farmacode.data.dao.ScanHistoryDao
 import com.farmacox.farmacode.data.dao.UserDao
+import com.farmacox.farmacode.data.dao.entity.ScanHistory
 import com.farmacox.farmacode.data.dao.entity.User
 
-@Database(entities = [User::class], version = 1, exportSchema = false)
+@Database(entities = [User::class, ScanHistory::class], version = 5, exportSchema = false)
 abstract class FarmaCodeDB : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun scanHistoryDao(): ScanHistoryDao
+
 
     companion object {
         @Volatile

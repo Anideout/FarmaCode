@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ScanHistoryDao {
-    @Query("SELECT * FROM scan_history ORDER BY scannedAt DESC LIMIT 10")
-    fun getRecentScans(): Flow<List<ScanHistory>>
+    @Query("SELECT * FROM scan_history WHERE userId = :userId ORDER BY scannedAt DESC LIMIT 50")
+    fun getRecentScans(userId: Long): Flow<List<ScanHistory>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(scan: ScanHistory)

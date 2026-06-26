@@ -7,6 +7,7 @@ import androidx.room.PrimaryKey
 data class ScanHistory(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    val userId: Long = 0,
     val medicationId: String,
     val nombre: String,
     val principioActivo: String,
@@ -18,5 +19,6 @@ data class ScanHistory(
     val categoriaTerapeutica: String,
     val certificacionISP: Boolean,
     val descripcion: String,
-    val scannedAt: Long = System.currentTimeMillis()
+    val scannedAt: Long = System.currentTimeMillis(),
+    val origen: String = "ocr"  // "ocr" = cámara, "busqueda" = búsqueda manual
 )

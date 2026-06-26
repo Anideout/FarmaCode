@@ -49,13 +49,23 @@ class LoginViewModel(private val userRepository: UserRepository) : ViewModel() {
 
         _uiState.value = state.copy(isLoading = true)
         viewModelScope.launch {
-            val user = userRepository.getUserByEmail(state.email)
-            
-            if (user != null && user.password == state.password) {
-                UserSession.userEmail = user.email
+            try {
+                val response = userRepository.loginOnBackend(state.email, state.password)
+                UserSession.userId = response.id
+                UserSession.userEmail = response.email
+                try {
+                    userRepository.insertUser(
+                        com.farmacox.farmacode.data.dao.entity.User(
+                            name = response.nombre, email = response.email, password = ""
+                        )
+                    )
+                } catch (_: Exception) { }
                 _uiState.value = _uiState.value.copy(isLoading = false, isLoginSuccessful = true)
-            } else {
-                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Credenciales incorrectas")
+            } catch (e: retrofit2.HttpException) {
+                val msg = if (e.code() == 400) "Credenciales incorrectas" else "Error del servidor"
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Sin respuesta del servidor, intenta de nuevo")
             }
         }
     }

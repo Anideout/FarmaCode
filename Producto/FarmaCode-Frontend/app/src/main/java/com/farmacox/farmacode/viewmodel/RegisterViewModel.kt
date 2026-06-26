@@ -70,13 +70,17 @@ class RegisterViewModel(private val userRepository: UserRepository) : ViewModel(
 
         _uiState.value = state.copy(isLoading = true)
         viewModelScope.launch {
-            val existingUser = userRepository.getUserByEmail(state.email)
-            if (existingUser != null) {
-                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "El usuario ya existe")
-            } else {
-                val newUser = User(name = state.name, email = state.email, password = state.password)
-                userRepository.insertUser(newUser)
+            try {
+                val response = userRepository.registerOnBackend(state.name, state.email, state.password)
+                try {
+                    userRepository.insertUser(User(name = response.nombre, email = response.email, password = ""))
+                } catch (_: Exception) { }
                 _uiState.value = _uiState.value.copy(isLoading = false, isRegisterSuccessful = true)
+            } catch (e: retrofit2.HttpException) {
+                val msg = if (e.code() == 400) "El email ya está registrado" else "Error del servidor"
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = "Sin respuesta del servidor, intenta de nuevo")
             }
         }
     }
