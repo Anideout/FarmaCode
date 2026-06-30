@@ -53,18 +53,21 @@ class ChatViewModel(private val repository: MedicationRepository) : ViewModel() 
         )
 
         viewModelScope.launch {
+            var callSucceeded = false
             val respuesta = try {
                 val response = RetrofitClient.busquedaService.chat(
                     ChatRequest(mensaje = message, historial = apiHistory.toList())
                 )
+                callSucceeded = true
                 response.respuesta
             } catch (e: Exception) {
                 "Lo siento, no pude conectarme al servidor. Por favor intenta nuevamente."
             }
 
-            // Actualizar historial para la próxima llamada
-            apiHistory.add(ChatTurn(rol = "user", contenido = message))
-            apiHistory.add(ChatTurn(rol = "model", contenido = respuesta))
+            if (callSucceeded) {
+                apiHistory.add(ChatTurn(rol = "user", contenido = message))
+                apiHistory.add(ChatTurn(rol = "model", contenido = respuesta))
+            }
 
             val assistantMsg = ChatMessage(content = respuesta, isUser = false)
             _uiState.value = _uiState.value.copy(

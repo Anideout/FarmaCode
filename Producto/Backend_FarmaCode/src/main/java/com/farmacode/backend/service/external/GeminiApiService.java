@@ -265,7 +265,7 @@ public class GeminiApiService {
      * Conversación multi-turno con Gemini restringida a farmacología.
      */
     public String chatFarmaceutico(List<ChatRequestDTO.TurnoChat> historial, String nuevoMensaje, String systemPrompt) {
-        if (apiKey == null || apiKey.isBlank()) return "Error: API key no configurada.";
+        if (apiKey == null || apiKey.isBlank()) throw new GeminiApiException("API key no configurada.", null);
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -295,26 +295,27 @@ public class GeminiApiService {
             newContent.put("parts", List.of(newPart));
             contents.add(newContent);
 
-            Map<String, Object> thinkingConfig = new HashMap<>();
-            thinkingConfig.put("thinkingBudget", 0);
-            Map<String, Object> generationConfig = new HashMap<>();
-            generationConfig.put("thinkingConfig", thinkingConfig);
-
             Map<String, Object> payload = new HashMap<>();
             payload.put("system_instruction", systemInstruction);
             payload.put("contents", contents);
-            payload.put("generationConfig", generationConfig);
 
             String url = apiUrl + "?key=" + apiKey;
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
             @SuppressWarnings("rawtypes")
             ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
-            return extraerTextoRespuesta(response.getBody());
+            String texto = extraerTextoRespuesta(response.getBody());
+            if ("DESCONOCIDO".equals(texto)) throw new GeminiApiException("Respuesta vacía o bloqueada de Gemini.", null);
+            return texto;
 
+        } catch (GeminiApiException ex) {
+            throw ex;
+        } catch (HttpStatusCodeException ex) {
+            log.error("Gemini API respondió con error {} en chat: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
+            throw new GeminiApiException("Gemini API " + ex.getStatusCode(), ex);
         } catch (Exception ex) {
             log.error("Error en chatFarmaceutico con Gemini: {}", ex.getMessage());
-            return "Lo siento, ocurrió un error al procesar tu consulta. Por favor intenta nuevamente.";
+            throw new GeminiApiException("Error al llamar a Gemini: " + ex.getMessage(), ex);
         }
     }
 
