@@ -12,4 +12,4 @@ data class BioequivalentesResponse(
     val medicamentos: List<MedicamentoResponse>
 )
 
-data class OcrRequest(val imagenBase64: String)
+data class OcrRequest(val textoOcr: String, val imagenBase64: String)

@@ -383,8 +383,12 @@ public class GeminiApiService {
                 if (content != null) {
                     List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
                     if (parts != null && !parts.isEmpty()) {
-                        Object text = parts.get(0).get("text");
-                        return text != null ? text.toString().trim() : "DESCONOCIDO";
+                        for (Map<String, Object> part : parts) {
+                            // Skip thinking parts produced by gemini-2.5-flash
+                            if (Boolean.TRUE.equals(part.get("thought"))) continue;
+                            Object text = part.get("text");
+                            if (text != null) return text.toString().trim();
+                        }
                     }
                 }
             }

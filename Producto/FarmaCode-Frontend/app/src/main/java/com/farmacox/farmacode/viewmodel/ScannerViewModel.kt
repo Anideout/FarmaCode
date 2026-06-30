@@ -123,7 +123,7 @@ class ScannerViewModel(private val repository: MedicationRepository) : ViewModel
         viewModelScope.launch {
             try {
                 val response = withTimeout(45000L) {
-                    RetrofitClient.busquedaService.buscarPorOcr(OcrRequest(imagenBase64 ?: ""))
+                    RetrofitClient.busquedaService.buscarPorOcr(OcrRequest(textoOcr = texto, imagenBase64 = imagenBase64 ?: ""))
                 }
 
                 if (response.principioActivo == "NO_ES_MEDICAMENTO") {
