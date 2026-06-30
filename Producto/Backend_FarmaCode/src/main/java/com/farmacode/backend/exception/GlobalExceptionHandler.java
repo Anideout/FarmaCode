@@ -64,8 +64,24 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(GeminiApiException.class)
     public ResponseEntity<Map<String, Object>> handleGeminiApiError(GeminiApiException ex) {
+        // Se registra el detalle técnico en los logs, pero al cliente se le devuelve
+        // un mensaje genérico para no exponer la tecnología interna.
         log.error("Error en Gemini API: {}", ex.getMessage(), ex);
-        return buildResponse(HttpStatus.BAD_GATEWAY, "Error al comunicarse con Gemini API: " + ex.getMessage(), null);
+        return buildResponse(HttpStatus.BAD_GATEWAY,
+                "El asistente no está disponible en este momento. Intenta nuevamente en unos minutos.",
+                null);
+    }
+
+    /**
+     * Maneja el agotamiento de cuota de Gemini (HTTP 429) con un mensaje claro
+     * para el usuario, en vez de un error técnico genérico. Responde 503.
+     */
+    @ExceptionHandler(GeminiRateLimitException.class)
+    public ResponseEntity<Map<String, Object>> handleGeminiRateLimit(GeminiRateLimitException ex) {
+        log.warn("Cuota de Gemini agotada: {}", ex.getMessage());
+        return buildResponse(HttpStatus.SERVICE_UNAVAILABLE,
+                "El asistente no está disponible en este momento. Intenta nuevamente en unos minutos.",
+                null);
     }
 
     @ExceptionHandler(Exception.class)

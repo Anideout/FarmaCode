@@ -3,6 +3,7 @@ package com.farmacode.backend.service.external;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.farmacode.backend.exception.GeminiApiException;
+import com.farmacode.backend.exception.GeminiRateLimitException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -110,6 +111,7 @@ public class GeminiApiService {
             return resultado;
 
         } catch (HttpStatusCodeException ex) {
+            lanzarSiEsRateLimit(ex);
             String body = ex.getResponseBodyAsString();
             log.error("Gemini API respondió con error {}: {}", ex.getStatusCode(), body);
             throw new GeminiApiException("Gemini API " + ex.getStatusCode() + ": " + body, ex);
@@ -141,6 +143,8 @@ public class GeminiApiService {
             String resultado = llamarGeminiTexto(prompt);
             log.info("Gemini identificó principio activo de '{}': '{}'", nombreComercial, resultado);
             return resultado;
+        } catch (GeminiRateLimitException ex) {
+            throw ex;
         } catch (Exception ex) {
             log.error("Error al identificar principio activo con Gemini para '{}': {}", nombreComercial, ex.getMessage());
             return "";
@@ -184,6 +188,8 @@ public class GeminiApiService {
             log.info("Gemini extrajo de OCR — nombre: '{}', principioActivo: '{}', dosis: '{}'",
                     info.nombreComercial(), info.principioActivo(), info.dosis());
             return info;
+        } catch (GeminiRateLimitException ex) {
+            throw ex;
         } catch (Exception ex) {
             log.error("Error al extraer información OCR con Gemini: {}", ex.getMessage());
             return InfoMedicamento.vacia();
@@ -255,6 +261,10 @@ public class GeminiApiService {
             log.info("Gemini Vision extrajo — nombre: '{}', principioActivo: '{}', dosis: '{}'",
                     info.nombreComercial(), info.principioActivo(), info.dosis());
             return info;
+        } catch (HttpStatusCodeException ex) {
+            lanzarSiEsRateLimit(ex);
+            log.error("Error al extraer información de imagen con Gemini Vision: {}", ex.getMessage());
+            return InfoMedicamento.vacia();
         } catch (Exception ex) {
             log.error("Error al extraer información de imagen con Gemini Vision: {}", ex.getMessage());
             return InfoMedicamento.vacia();
@@ -295,9 +305,17 @@ public class GeminiApiService {
             newContent.put("parts", List.of(newPart));
             contents.add(newContent);
 
+            // thinkingBudget:0 desactiva el "razonamiento" interno del modelo, que en
+            // mensajes simples consume cientos de tokens extra. Reduce el gasto de cuota.
+            Map<String, Object> thinkingConfig = new HashMap<>();
+            thinkingConfig.put("thinkingBudget", 0);
+            Map<String, Object> generationConfig = new HashMap<>();
+            generationConfig.put("thinkingConfig", thinkingConfig);
+
             Map<String, Object> payload = new HashMap<>();
             payload.put("system_instruction", systemInstruction);
             payload.put("contents", contents);
+            payload.put("generationConfig", generationConfig);
 
             String url = apiUrl + "?key=" + apiKey;
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
@@ -311,6 +329,7 @@ public class GeminiApiService {
         } catch (GeminiApiException ex) {
             throw ex;
         } catch (HttpStatusCodeException ex) {
+            lanzarSiEsRateLimit(ex);
             log.error("Gemini API respondió con error {} en chat: {}", ex.getStatusCode(), ex.getResponseBodyAsString());
             throw new GeminiApiException("Gemini API " + ex.getStatusCode(), ex);
         } catch (Exception ex) {
@@ -320,6 +339,17 @@ public class GeminiApiService {
     }
 
     // ─── Métodos privados ──────────────────────────────────────────────────────
+
+    /**
+     * Si el error HTTP de Gemini es 429 (cuota agotada / demasiadas peticiones),
+     * lanza GeminiRateLimitException para que el cliente reciba un mensaje claro.
+     */
+    private void lanzarSiEsRateLimit(HttpStatusCodeException ex) {
+        if (ex.getStatusCode().value() == 429) {
+            log.warn("Cuota de Gemini agotada (429): {}", ex.getResponseBodyAsString());
+            throw new GeminiRateLimitException("Cuota de Gemini agotada");
+        }
+    }
 
     private String llamarGeminiTexto(String prompt) {
         HttpHeaders headers = new HttpHeaders();
@@ -343,9 +373,14 @@ public class GeminiApiService {
         String url = apiUrl + "?key=" + apiKey;
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
-        @SuppressWarnings("rawtypes")
-        ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
-        return extraerTextoRespuesta(response.getBody());
+        try {
+            @SuppressWarnings("rawtypes")
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, request, Map.class);
+            return extraerTextoRespuesta(response.getBody());
+        } catch (HttpStatusCodeException ex) {
+            lanzarSiEsRateLimit(ex);
+            throw ex;
+        }
     }
 
     private InfoMedicamento parsearInfoMedicamento(String json) {

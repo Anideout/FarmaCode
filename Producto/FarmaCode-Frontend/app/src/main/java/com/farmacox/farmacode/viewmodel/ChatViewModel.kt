@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import retrofit2.HttpException
 
 data class ChatUiState(
     val messages: List<ChatMessage> = emptyList(),
@@ -60,6 +62,15 @@ class ChatViewModel(private val repository: MedicationRepository) : ViewModel() 
                 )
                 callSucceeded = true
                 response.respuesta
+            } catch (e: HttpException) {
+                // El backend manda un mensaje claro (ej: límite de cuota de IA). Mostrarlo.
+                try {
+                    val body = e.response()?.errorBody()?.string() ?: ""
+                    JSONObject(body).optString("message", "")
+                        .ifBlank { "Lo siento, el asistente no está disponible en este momento. Intenta más tarde." }
+                } catch (_: Exception) {
+                    "Lo siento, el asistente no está disponible en este momento. Intenta más tarde."
+                }
             } catch (e: Exception) {
                 "Lo siento, no pude conectarme al servidor. Por favor intenta nuevamente."
             }
